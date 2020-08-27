@@ -4,17 +4,17 @@ import React from "react";
 
 export interface Props extends HTMLAttributes<HTMLDivElement> {
   children(transform: Transform): ReactElement,
-  initialTransform?: Transform
+  initialTransform?: Transform,
+  limit(t: Transform): Transform
 }
 
 const defaultTransform = { x: 0, y: 0, s: 1 };
 
-export default function PanZoom({ children, style, initialTransform = defaultTransform, ...props }: Props) {
+export default function PanZoom({ children, style, limit, initialTransform = defaultTransform, ...props }: Props) {
   const pointers = useRef(new Map<number, PosPos>());
   const [transform, setTransform] = useState(initialTransform);
   const requestSingleAnimationFrame = useSingleAnimationFrame(() => {
-    console.log('single');
-    setTransform(t => solve(t, ...pointers.current.values()));
+    setTransform(t => solve(t, limit, ...pointers.current.values()));
   });
 
   const onPointerDown = useCallback((/** @type {PointerEvent} */ e) => {
@@ -44,7 +44,7 @@ export default function PanZoom({ children, style, initialTransform = defaultTra
   const onDoubleClick = useCallback(e => {
     const viewPos = getViewPos(e);
     const modelPos = viewToModel(viewPos, transform);
-    setTransform(solveSingle(viewPos, modelPos, transform.s * (1.2)));
+    setTransform(limit(solveSingle(viewPos, modelPos, transform.s * (1.2))));
 
     e.preventDefault();
     e.stopPropagation();
@@ -54,7 +54,7 @@ export default function PanZoom({ children, style, initialTransform = defaultTra
   const onWheel = useCallback(e => {
     const viewPos = getViewPos(e);
     const modelPos = viewToModel(viewPos, transform);
-    setTransform(solveSingle(viewPos, modelPos, transform.s * (1 + e.deltaY / 100)));
+    setTransform(limit(solveSingle(viewPos, modelPos, transform.s * (1 + e.deltaY / 100))));
 
     e.preventDefault();
     e.stopPropagation();

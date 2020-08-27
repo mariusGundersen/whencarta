@@ -37,22 +37,22 @@ export function viewToModel(viewPos: Pos, transform: Transform): Pos {
   };
 }
 
-export function solve(transform: Transform, ...positions: PosPos[]): Transform {
+export function solve(transform: Transform, limit: (t: Transform) => Transform, ...positions: PosPos[]): Transform {
   if (positions.length === 1) {
     const { viewPos, modelPos } = positions[0];
 
-    return solveSingle(viewPos, modelPos, transform.s);
+    transform = solveSingle(viewPos, modelPos, transform.s);
   } else if (positions.length > 1) {
     transform = solveMultiple(positions);
 
     for (const position of positions) {
       position.modelPos = viewToModel(position.viewPos, transform);
     }
-
-    return transform;
-  } else {
-    return transform;
   }
+
+  transform = limit(transform);
+
+  return transform;
 }
 
 export function solveSingle(viewPos: Pos, modelPos: Pos, s: number): Transform {

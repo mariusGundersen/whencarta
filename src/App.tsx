@@ -70,12 +70,27 @@ function App() {
     { t: 0, w: 2020, y: 4, label: 'The common era' },
     { t: -10_000, y: 3, label: 'The start of the holocene' },
 
+    { t: -10_000_000_000, w: 10_000_000_000, y: 0, label: '10 billion' },
+    { t: -1_000_000_000, w: 1_000_000_000, y: 1, label: '1 billion' },
+    { t: -100_000_000, w: 100_000_000, y: 2, label: '100 million' },
+    { t: -10_000_000, w: 10_000_000, y: 3, label: '10 million' },
+    { t: -1_000_000, w: 1_000_000, y: 4, label: '1 million' },
+    { t: -100_000, w: 100_000, y: 5, label: '100 thousand' },
+    { t: -10_000, w: 10_000, y: 6, label: '10 thousand' },
+    { t: -1_000, w: 1_000, y: 7, label: 'millenium' },
+    { t: -100, w: 100, y: 8, label: 'century' },
+    { t: -10, w: 10, y: 9, label: 'decade' },
+    { t: -1, w: 1, y: 10, label: 'year' },
+    { t: 0, w: 2_000, y: 7, label: 'The common ear' },
+
   ];
 
   return (
     <div className="App">
-      <PanZoom initialTransform={{ x: 996.5912195703338, y: 232.03595308441666, s: 7.618320004039853e-8 }}>
+      <PanZoom initialTransform={{ x: 1000, y: 0, s: 1 / 13_000_000 }} limit={({ x, y, s }) => ({ x: clamp(1000 - 2020 * s, x, 13_000_000_000 * s), y: 0, s: clamp(1 / 13_000_000, s, 1_000) })}>
         {(transform) => {
+
+          const unitHeight = 100;
 
           const resize = ({ x: left, y: top, width, height }: { x: number, y: number, width: number, height: number }) => ({
             x: transform.s * left + transform.x,
@@ -83,22 +98,30 @@ function App() {
             width: transform.s * width,
             height: transform.s * height,
           });
-          const resizeTimeline = ({ x: left, y: top, width, height }: { x: number, y: number, width: number, height: number }) => ({
-            x: transform.s * left + transform.x,
-            y: top,
+
+          const yOffset = Math.max(0, Math.log10(transform.s) + 7);
+
+          console.log(transform.x, yOffset);
+          const timeToX = (t: number) => transform.s * t + transform.x;
+          const transformY = (y: number) => y - yOffset * unitHeight;
+
+          const resizeTimeline = ({ x, y, width, height }: { x: number, y: number, width: number, height: number }) => ({
+            x: timeToX(x),
+            y: transformY(y),
             width: transform.s * width,
             height: height,
           });
-          const timeToX = (t: number) => transform.s * t + transform.x;
 
           return (
-            <svg viewBox="0 0 1000 1000" width="1000" height="1000" style={{ border: '1px solid black' }}>
-              {events.map(({ t, w = 0, y, label }, index) => (
-                <React.Fragment key={index}>
-                  <rect {...resizeTimeline({ width: w, height: 25, x: t, y: y * 25 })} fill="white" stroke="black" />
-                  <text x={timeToX(t)} y={y * 25 + 12.5} dominantBaseline="middle">{label}</text>
-                </React.Fragment>
-              ))}
+            <svg viewBox="0 0 1000 300" width="1000" height="300" style={{ border: '1px solid black' }}>
+              {events
+                .filter(({ y }) => y > yOffset - 1 && y < yOffset + 3)
+                .map(({ t, w = 0, y, label }, index) => (
+                  <React.Fragment key={index}>
+                    <rect {...resizeTimeline({ width: w, height: unitHeight, x: t, y: y * unitHeight })} fill="white" stroke="black" />
+                    <text x={timeToX(t)} y={transformY(y * unitHeight + unitHeight / 2)} dominantBaseline="middle">{label}</text>
+                  </React.Fragment>
+                ))}
             </svg>
           );
         }}
@@ -106,5 +129,7 @@ function App() {
     </div >
   );
 }
+
+const clamp = (min: number, x: number, max: number) => Math.min(max, Math.max(x, min));
 
 export default App;
