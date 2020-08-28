@@ -27,8 +27,11 @@ interface MomentWithEnd {
 
 type MomentNode = MomentWithEnd | MomentWithWidth;
 
+const minYear = -13_800_000_000;
+const maxYear = new Date().getFullYear();
+
 const root: MomentNode = {
-  start: -13_000_000_000, end: 2020, label: 'The universe exists',
+  start: minYear, end: maxYear, label: 'The universe exists',
   children: [
     { start: -4_600_000_000, end: -4_000_000_000, label: 'Hadean eon' },
     {
@@ -89,12 +92,12 @@ const root: MomentNode = {
             { start: -66_000_000, end: -23_030_000, label: 'Paleogene' },
             { start: -23_030_000, end: -2_580_000, label: 'Neogene' },
             {
-              start: -2_580_000, end: 2020, label: 'Quaternary', children: [
+              start: -2_580_000, end: maxYear, label: 'Quaternary', children: [
                 { start: -2_580_000, end: -11_700, label: 'Pleistocene' },
                 {
-                  start: -11_700, end: 2020, label: 'Holocene-1', children: [
+                  start: -11_700, end: maxYear, label: 'Holocene-1', children: [
                     {
-                      start: -11_700, end: 2020, label: 'Holocene', children: [
+                      start: -11_700, end: maxYear, label: 'Holocene', children: [
 
                       ]
                     }
@@ -130,6 +133,19 @@ function flattenChildren({ children, start, label, ...m }: MomentNode, y: number
 
 const events = flattenChildren(root, 0);
 
+function format(n: number, t: number) {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) {
+    return n / 1_000_000_000 + ' billion';
+  } else if (abs >= 1_000_000) {
+    return n / 1_000_000 + ' million';
+  } else if (abs >= 10_000) {
+    return n / 1_000 + ' millennia';
+  } else {
+    return n;
+  }
+}
+
 const timescales = [
   { y: 0, t: 10_000_000_000, label: '10 billion' },
   { y: 1, t: 1_000_000_000, label: '1 billion' },
@@ -144,24 +160,30 @@ const timescales = [
   { y: 10, t: 1, label: 'year' },
 ];
 
-
-function limit({ x, s }: Transform) {
-  s = clamp(1 / 13000000, s, 1000);
-  x = clamp(1000 - 2020 * s, x, 13000000000 * s);
-  return ({
-    x,
-    y: 0,
-    s
-  });
-};
-
 function App() {
+
+  const width = 1000;
+  const height = 300;
+
+  const minZoom = width / -minYear;
+  const maxZoom = 1000;
+
+  function limit({ x, s }: Transform) {
+    s = clamp(minZoom, s, maxZoom);
+    x = clamp(width - maxYear * s, x, -minYear * s);
+    return ({
+      x,
+      y: 0,
+      s
+    });
+  };
+
   return (
     <div className="App">
-      <PanZoom initialTransform={{ x: 1000, y: 0, s: 1 / 13_000_000 }} limit={limit}>
+      <PanZoom initialTransform={{ x: width, y: 0, s: minZoom }} limit={limit}>
         {(transform) => {
 
-          const unitHeight = 100;
+          const unitHeight = height / 3;
 
           const yOffset = Math.max(0, Math.log10(transform.s) + 7);
 
@@ -170,7 +192,7 @@ function App() {
           const xToTime = (x: number) => (x - transform.x) / transform.s;
 
           const timeLeft = xToTime(0);
-          const timeRight = xToTime(1000);
+          const timeRight = xToTime(width);
 
           const resizeTimeline = ({ x, y, width, height }: { x: number, y: number, width: number, height: number }) => ({
             x: timeToX(x),
@@ -180,14 +202,21 @@ function App() {
           });
 
           return (
-            <svg viewBox="0 0 1000 300" width="1000" height="300" style={{ border: '1px solid black' }}>
+            <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ border: '1px solid black' }}>
               {timescales
-                .filter(({ y }) => y > yOffset - 1 && y < yOffset + 2)
+                .filter(({ y }) => y > yOffset - 1 && y < yOffset + 1.5)
                 .flatMap(({ y, t, label }) => {
 
                   const markers: ReactNode[] = [];
-                  for (let i = Math.floor(timeLeft / t) * t, key = 0; i < timeRight; i += t, key++) {
-                    markers.push(<rect key={label + key} x={timeToX(i)} y={transformY(y * unitHeight)} width={timeToX(t)} height={100} fill="white" stroke="red" />)
+                  for (let i = Math.floor(timeLeft / t) * t, key = 0; i <= timeRight; i += t, key++) {
+                    markers.push(
+                      <g key={label + key} stroke="darkblue" opacity={clamp(0, 0.3 + (1 + yOffset - y) * 3, 0.9)}>
+                        <line x1={timeToX(i)} x2={timeToX(i)} y1={0} y2={height} />
+                        <text x={timeToX(i)} y={transformY((y + 1) * unitHeight)} textAnchor="middle" fill="white">
+                          {format(i, t)}
+                        </text>
+                      </g>
+                    );
                   }
 
                   return markers;
@@ -198,7 +227,7 @@ function App() {
                 .map(({ start, end, y, label }) => (
                   <React.Fragment key={label}>
                     <rect {...resizeTimeline({ width: end - start, height: unitHeight / 2, x: start, y: y * unitHeight + unitHeight / 4 })} fill="white" stroke="black" />
-                    <text x={timeToX(start)} y={transformY(y * unitHeight + unitHeight / 2)} dominantBaseline="middle">{label}</text>
+                    <text x={Math.max(0, timeToX(start))} y={transformY(y * unitHeight + unitHeight / 2)} dominantBaseline="middle">{label}</text>
                   </React.Fragment>
                 ))}
             </svg>
