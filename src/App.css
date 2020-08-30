@@ -1,6 +1,28 @@
-.App {
+.app {
+  display: grid;
+  grid-template-columns: minmax(auto, 2fr) minmax(auto, 1fr);
+  grid-template-rows: auto minmax(auto, 1fr) 300px;
+  grid-template-areas: 
+    "search search"
+    "map info"
+    "timeline timeline";
 }
 
+.search {
+  grid-area: search;
+}
+
+.map {
+  grid-area: map;
+}
+
+.info {
+  grid-area: info;
+}
+
+.Timeline {
+  grid-area: timeline
+}
 
 svg text {
   user-select: none;

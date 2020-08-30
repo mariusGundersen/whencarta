@@ -1,16 +1,6 @@
-import React, { ReactNode } from 'react';
-import logo from './logo.svg';
+import React from 'react';
 import './App.css';
-import PanZoom from './PanZoom';
-import { modelToView, Transform } from './lib/panzoom';
-import { timeline } from 'console';
-
-interface Timespan {
-  start: number,
-  end: number,
-  label: string,
-  children?: Timespan[]
-}
+import Timeline, { Moment } from './Timeline';
 
 interface MomentWithWidth {
   start: number,
@@ -112,12 +102,6 @@ const root: MomentNode = {
   ]
 };
 
-interface Moment {
-  start: number,
-  y: number,
-  end: number,
-  label: string
-}
 
 function flattenChildren({ children, start, label, ...m }: MomentNode, y: number): Moment[] {
   return [
@@ -133,111 +117,22 @@ function flattenChildren({ children, start, label, ...m }: MomentNode, y: number
 
 const events = flattenChildren(root, 0);
 
-function format(n: number, t: number) {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000_000) {
-    return n / 1_000_000_000 + ' billion';
-  } else if (abs >= 1_000_000) {
-    return n / 1_000_000 + ' million';
-  } else if (abs >= 10_000) {
-    return n / 1_000 + ' millennia';
-  } else {
-    return n;
-  }
-}
-
-const timescales = [
-  { y: 0, t: 10_000_000_000, label: '10 billion' },
-  { y: 1, t: 1_000_000_000, label: '1 billion' },
-  { y: 2, t: 100_000_000, label: '100 million' },
-  { y: 3, t: 10_000_000, label: '10 million' },
-  { y: 4, t: 1_000_000, label: '1 million' },
-  { y: 5, t: 100_000, label: '100 thousand' },
-  { y: 6, t: 10_000, label: '10 thousand' },
-  { y: 7, t: 1_000, label: 'millennium' },
-  { y: 8, t: 100, label: 'century' },
-  { y: 9, t: 10, label: 'decade' },
-  { y: 10, t: 1, label: 'year' },
-];
 
 function App() {
 
-  const width = 1000;
-  const height = 300;
+  return <div className="app">
+    <input type="search" className="search" />
+    <div className="map">
 
-  const minZoom = width / -minYear;
-  const maxZoom = 1000;
-
-  function limit({ x, s }: Transform) {
-    s = clamp(minZoom, s, maxZoom);
-    x = clamp(width - maxYear * s, x, -minYear * s);
-    return ({
-      x,
-      y: 0,
-      s
-    });
-  };
-
-  return (
-    <div className="App">
-      <PanZoom initialTransform={{ x: width, y: 0, s: minZoom }} limit={limit}>
-        {(transform) => {
-
-          const unitHeight = height / 3;
-
-          const yOffset = Math.max(0, Math.log10(transform.s) + 7);
-
-          const timeToX = (t: number) => transform.s * t + transform.x;
-          const transformY = (y: number) => y - yOffset * unitHeight;
-          const xToTime = (x: number) => (x - transform.x) / transform.s;
-
-          const timeLeft = xToTime(0);
-          const timeRight = xToTime(width);
-
-          const resizeTimeline = ({ x, y, width, height }: { x: number, y: number, width: number, height: number }) => ({
-            x: timeToX(x),
-            y: transformY(y),
-            width: transform.s * width,
-            height: height,
-          });
-
-          return (
-            <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ border: '1px solid black' }}>
-              {timescales
-                .filter(({ y }) => y > yOffset - 1 && y < yOffset + 1.5)
-                .flatMap(({ y, t, label }) => {
-
-                  const markers: ReactNode[] = [];
-                  for (let i = Math.floor(timeLeft / t) * t, key = 0; i <= timeRight; i += t, key++) {
-                    markers.push(
-                      <g key={label + key} stroke="darkblue" opacity={clamp(0, 0.3 + (1 + yOffset - y) * 3, 0.9)}>
-                        <line x1={timeToX(i)} x2={timeToX(i)} y1={0} y2={height} />
-                        <text x={timeToX(i)} y={transformY((y + 1) * unitHeight)} textAnchor="middle" fill="white">
-                          {format(i, t)}
-                        </text>
-                      </g>
-                    );
-                  }
-
-                  return markers;
-                })}
-              {events
-                .filter(({ y }) => y > yOffset - 1 && y < yOffset + 3)
-                .filter(({ start, end }) => start < timeRight && end > timeLeft)
-                .map(({ start, end, y, label }) => (
-                  <React.Fragment key={label}>
-                    <rect {...resizeTimeline({ width: end - start, height: unitHeight / 2, x: start, y: y * unitHeight + unitHeight / 4 })} fill="white" stroke="black" />
-                    <text x={Math.max(0, timeToX(start))} y={transformY(y * unitHeight + unitHeight / 2)} dominantBaseline="middle">{label}</text>
-                  </React.Fragment>
-                ))}
-            </svg>
-          );
-        }}
-      </PanZoom>
-    </div >
-  );
+    </div>
+    <div className="info">
+      info
+    </div>
+    <Timeline events={events} minYear={minYear} maxYear={maxYear} />
+  </div>
 }
 
-const clamp = (min: number, x: number, max: number) => Math.min(max, Math.max(x, min));
+
+
 
 export default App;

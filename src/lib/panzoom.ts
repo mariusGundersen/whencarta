@@ -5,9 +5,10 @@ export interface Pos {
   y: number
 };
 export interface Transform {
-  x: number,
-  y: number,
-  s: number
+  tx: number,
+  ty: number,
+  sx: number,
+  sy: number
 };
 export interface PosPos {
   modelPos: Pos,
@@ -25,15 +26,15 @@ export function getViewPos(event: PointerEvent): Pos {
 
 export function modelToView(modelPos: Pos, transform: Transform): Pos {
   return {
-    x: transform.s * modelPos.x + transform.x,
-    y: transform.s * modelPos.y + transform.y
+    x: transform.sx * modelPos.x + transform.tx,
+    y: transform.sy * modelPos.y + transform.ty
   };
 }
 
 export function viewToModel(viewPos: Pos, transform: Transform): Pos {
   return {
-    x: (viewPos.x - transform.x) / transform.s,
-    y: (viewPos.y - transform.y) / transform.s
+    x: (viewPos.x - transform.tx) / transform.sx,
+    y: (viewPos.y - transform.ty) / transform.sy
   };
 }
 
@@ -41,10 +42,11 @@ export function solve(transform: Transform, limit: (t: Transform) => Transform, 
   if (positions.length === 1) {
     const { viewPos, modelPos } = positions[0];
 
-    transform = solveSingle(viewPos, modelPos, transform.s);
+    transform = solveSingle(viewPos, modelPos);
+  } else if (positions.length === 2) {
+    transform = solveDouble(positions[0], positions[1]);
   } else if (positions.length > 1) {
     transform = solveMultiple(positions);
-
     for (const position of positions) {
       position.modelPos = viewToModel(position.viewPos, transform);
     }
@@ -55,11 +57,44 @@ export function solve(transform: Transform, limit: (t: Transform) => Transform, 
   return transform;
 }
 
-export function solveSingle(viewPos: Pos, modelPos: Pos, s: number): Transform {
+export function translateY(viewPos: Pos, modelPos: Pos, ty: number): Transform {
+  const sx = 10 ** (-ty / 100);
   return {
-    x: viewPos.x - modelPos.x * s,
-    y: viewPos.y - modelPos.y * s,
-    s
+    tx: viewPos.x - modelPos.x * sx,
+    ty,
+    sx,
+    sy: 100
+  };
+}
+
+export function solveSingle(viewPos: Pos, modelPos: Pos): Transform {
+  const ty = viewPos.y - modelPos.y * 100;
+  const sx = 10 ** (-ty / 100);
+  return {
+    tx: viewPos.x - modelPos.x * sx,
+    ty,
+    sx,
+    sy: 100
+  };
+}
+
+export function solveDouble(a: PosPos, b: PosPos): Transform {
+  // a.vx = a.mx*sx + tx
+  // b.vx = b.mx*sx + tx
+
+  // tx = a.vx - a.mx*sx
+  // b.vx - b.mx*sx = a.vx - a.mx*sx
+  // b.vx - a.vx = b.mx*sx - a.mx*sx
+  // sx = (b.vx - a.vx) / (b.mx - a.mx)
+
+  const sx = (b.viewPos.x - a.viewPos.x) / (b.modelPos.x - a.modelPos.x);
+  const tx = a.viewPos.x - a.modelPos.x * sx;
+  const ty = -Math.log10(sx) * 100;
+  return {
+    tx,
+    ty,
+    sx,
+    sy: 100
   };
 }
 
@@ -103,13 +138,14 @@ export function solveMultiple(positions: PosPos[]): Transform {
   //           det  [inv02  inv12  inv22]
 
   return {
-    s: (inv00 * v0 + inv01 * v1 + inv02 * v2) / det,
-    x: (inv01 * v0 + inv11 * v1 + inv12 * v2) / det,
-    y: (inv02 * v0 + inv12 * v1 + inv22 * v2) / det
+    sx: (inv00 * v0 + inv01 * v1 + inv02 * v2) / det,
+    sy: 100,
+    tx: (inv01 * v0 + inv11 * v1 + inv12 * v2) / det,
+    ty: (inv02 * v0 + inv12 * v1 + inv22 * v2) / det
   };
 }
 
-export function toMatrix({ x, y, s }: Transform) {
+export function toMatrix({ tx: x, ty: y, sx: s }: Transform) {
   return `matrix(${s}, 0, 0, ${s}, ${x}, ${y})`;
 }
 
