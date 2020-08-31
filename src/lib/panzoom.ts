@@ -24,18 +24,30 @@ export function getViewPos(event: PointerEvent): Pos {
   };
 }
 
+export function timeToX(x: number, transform: Transform): number {
+  return transform.sx * x + transform.tx;
+}
+
+export function transformY(y: number, transform: Transform): number {
+  return transform.sy * y + transform.ty;
+}
+
 export function modelToView(modelPos: Pos, transform: Transform): Pos {
   return {
-    x: transform.sx * modelPos.x + transform.tx,
-    y: transform.sy * modelPos.y + transform.ty
+    x: timeToX(modelPos.x, transform),
+    y: transformY(modelPos.y, transform)
   };
 }
 
 export function viewToModel(viewPos: Pos, transform: Transform): Pos {
   return {
-    x: (viewPos.x - transform.tx) / transform.sx,
+    x: xToTime(viewPos.x, transform),
     y: (viewPos.y - transform.ty) / transform.sy
   };
+}
+
+export function xToTime(x: number, transform: Transform): number {
+  return (x - transform.tx) / transform.sx;
 }
 
 export function solve(transform: Transform, limit: (t: Transform) => Transform, ...positions: PosPos[]): Transform {
@@ -47,9 +59,10 @@ export function solve(transform: Transform, limit: (t: Transform) => Transform, 
     transform = solveDouble(positions[0], positions[1]);
   } else if (positions.length > 1) {
     transform = solveMultiple(positions);
-    for (const position of positions) {
-      position.modelPos = viewToModel(position.viewPos, transform);
-    }
+  }
+
+  for (const position of positions) {
+    position.modelPos = viewToModel(position.viewPos, transform);
   }
 
   transform = limit(transform);
@@ -160,4 +173,8 @@ export function debouncedAnimationFrame(func: () => void) {
       });
     }
   }
+}
+
+export function ease() {
+
 }

@@ -21,7 +21,7 @@ const minYear = -13_800_000_000;
 const maxYear = new Date().getFullYear();
 
 const root: MomentNode = {
-  start: minYear, end: maxYear, label: 'The universe exists',
+  start: minYear + 100_000, end: maxYear, label: 'The universe exists',
   children: [
     { start: -4_600_000_000, end: -4_000_000_000, label: 'Hadean eon' },
     {
@@ -103,11 +103,11 @@ const root: MomentNode = {
                   ]
                 },
                 {
-                  start: -9_700, end: maxYear, label: 'Holocene  ', children: [
+                  start: -9_700, end: maxYear, label: 'Holocene', children: [
                     {
-                      start: -9_700, end: maxYear, label: 'Holocene ', children: [
+                      start: -9_700, end: maxYear, label: 'Holocene', children: [
                         {
-                          start: -9_700, end: maxYear, label: 'Holocene  ', children: [
+                          start: -9_700, end: maxYear, label: 'Holocene', children: [
                             { start: -9_700, end: -6_200, label: 'Greenlandian' },
                             { start: -6_200, end: -2_200, label: 'Northgrippian' },
                             { start: -2_200, end: maxYear, label: 'Meghalayan' },
@@ -128,7 +128,7 @@ const root: MomentNode = {
 };
 
 
-function flattenChildren({ children, start, label, ...m }: MomentNode, y: number): Moment[] {
+function flattenChildren({ children, start, label, ...m }: MomentNode, y: number): (Moment & { y: number })[] {
   return [
     {
       start,
@@ -140,11 +140,10 @@ function flattenChildren({ children, start, label, ...m }: MomentNode, y: number
   ];
 }
 
-const events = flattenChildren(root, 0);
+const events = groupY(flattenChildren(root, -7));
 
 
-function App() {
-
+export default function App() {
   const [pos, setPos] = useDebounce({ x: 0, s: 1 }, 100);
 
   useEffect(() => {
@@ -180,10 +179,20 @@ function useDebounce<T>(initial: T, delay: number) {
   useEffect(() => {
     const timeout = setTimeout(() => setDelayedValue(value), delay);
     return () => clearTimeout(timeout);
-  }, [value]);
+  }, [value, delay]);
 
   return [delayedValue, setValue] as const;
 }
 
-
-export default App;
+function groupY(list: (Moment & { y: number })[]): { y: number, moments: Moment[] }[] {
+  const result: { y: number, moments: Moment[] }[] = [];
+  for (const { y, ...entry } of list) {
+    const found = result.find(x => x.y === y);
+    if (found) {
+      found.moments.push(entry);
+    } else {
+      result.push({ y, moments: [entry] });
+    }
+  }
+  return result;
+}
