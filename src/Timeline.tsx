@@ -5,7 +5,9 @@ import PanZoom from "./PanZoom";
 export interface Props {
   events: Moment[],
   minYear: number,
-  maxYear: number
+  maxYear: number,
+  initialPos?: { x: number, s: number },
+  onChange?: (pos: { x: number, s: number }) => void,
 }
 
 export interface Moment {
@@ -15,7 +17,13 @@ export interface Moment {
   label: string
 }
 
-export default function Timeline({ events, minYear, maxYear }: Props) {
+export default function Timeline({
+  events,
+  minYear,
+  maxYear,
+  initialPos,
+  onChange
+}: Props) {
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -44,9 +52,16 @@ export default function Timeline({ events, minYear, maxYear }: Props) {
     setHeight(size.height);
   }, []);
 
+  const initialTransform = {
+    tx: initialPos?.x ?? width,
+    ty: -Math.log10(initialPos?.s ?? minZoom) * 100,
+    sx: initialPos?.s ?? minZoom,
+    sy: 100
+  };
+
   return (
     <div className="Timeline" ref={ref}>
-      {ref.current && <PanZoom initialTransform={{ tx: width, ty: -Math.log10(minZoom) * 100, sx: minZoom, sy: 100 }} limit={limit}>
+      {ref.current && <PanZoom initialTransform={initialTransform} limit={limit} onTransform={onChange}>
         {(transform) => {
 
           const unitHeight = height / 3;
@@ -80,7 +95,7 @@ export default function Timeline({ events, minYear, maxYear }: Props) {
                     markers.push(
                       <g key={y + '-' + key} stroke="darkblue" opacity={clamp(0, 0.3 + (1 + yOffset - y) * 3, 0.9)}>
                         <line x1={viewPos.x} x2={viewPos.x} y1={0} y2={height} />
-                        <text x={viewPos.x} y={viewPos.y} textAnchor="middle" fill="white">
+                        <text x={viewPos.x} y={viewPos.y} textAnchor="middle" stroke="darkblue" fill="darkblue">
                           {format(x, t)}
                         </text>
                       </g>
@@ -103,10 +118,11 @@ export default function Timeline({ events, minYear, maxYear }: Props) {
                           width: end - start,
                           height: 1 / 2,
                         })}
-                        fill="white"
-                        stroke="black" />
+                        fill="#36d"
+                        stroke="white" />
                       <text
-                        x={Math.max(0, timeToX(start))}
+                        fill="white"
+                        x={Math.max(-20, timeToX(start))}
                         y={transformY(y + 1 / 2 - 7)}
                         dominantBaseline="middle">
                         {label}

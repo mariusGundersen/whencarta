@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 import Timeline, { Moment } from './Timeline';
 
@@ -80,15 +80,40 @@ const root: MomentNode = {
         {
           start: -66_000_000, w: 66_000_000, label: 'Cenozoic era', children: [
             { start: -66_000_000, end: -23_030_000, label: 'Paleogene' },
-            { start: -23_030_000, end: -2_580_000, label: 'Neogene' },
+            {
+              start: -23_030_000, end: -2_580_000, label: 'Neogene', children: [
+                { start: -23_030_000, end: -20_430_000, label: 'Aquitanian' },
+                { start: -20_430_000, end: -15_970_000, label: 'Burdigalian' },
+                { start: -15_970_000, end: -13_650_000, label: 'Langhian' },
+                { start: -13_650_000, end: -11_630_000, label: 'Serravallian' },
+                { start: -11_630_000, end: -7_246_000, label: 'Tortonian' },
+                { start: -7_246_000, end: -5_333_000, label: 'Messinian' },
+                { start: -5_333_000, end: -3_600_000, label: 'Zanclean' },
+                { start: -3_600_000, end: -2_580_000, label: 'Piacenzian' },
+              ]
+            },
             {
               start: -2_580_000, end: maxYear, label: 'Quaternary', children: [
-                { start: -2_580_000, end: -11_700, label: 'Pleistocene' },
                 {
-                  start: -11_700, end: maxYear, label: 'Holocene-1', children: [
+                  start: -2_580_000, end: -9_700, label: 'Pleistocene', children: [
+                    { start: -2_580_000, end: -1_800_000, label: 'Gelasian' },
+                    { start: -1_800_000, end: -774_000, label: 'Calabrian' },
+                    { start: -774_000, end: -129_000, label: 'Chibanian' },
+                    { start: -129_000, end: -9_700, label: 'Late Pleistocene' },
+                  ]
+                },
+                {
+                  start: -9_700, end: maxYear, label: 'Holocene  ', children: [
                     {
-                      start: -11_700, end: maxYear, label: 'Holocene', children: [
+                      start: -9_700, end: maxYear, label: 'Holocene ', children: [
+                        {
+                          start: -9_700, end: maxYear, label: 'Holocene  ', children: [
+                            { start: -9_700, end: -6_200, label: 'Greenlandian' },
+                            { start: -6_200, end: -2_200, label: 'Northgrippian' },
+                            { start: -2_200, end: maxYear, label: 'Meghalayan' },
 
+                          ]
+                        }
                       ]
                     }
                   ]
@@ -120,6 +145,14 @@ const events = flattenChildren(root, 0);
 
 function App() {
 
+  const [pos, setPos] = useDebounce({ x: 0, s: 1 }, 100);
+
+  useEffect(() => {
+    window.history.replaceState(null, '', `#${pos.x}|${pos.s}`)
+  }, [pos])
+
+  const initialPos = getInitialPos();
+
   return <div className="app">
     <input type="search" className="search" />
     <div className="map">
@@ -128,11 +161,29 @@ function App() {
     <div className="info">
       info
     </div>
-    <Timeline events={events} minYear={minYear} maxYear={maxYear} />
+    <Timeline events={events} minYear={minYear} maxYear={maxYear} initialPos={initialPos} onChange={setPos} />
   </div>
 }
 
 
+function getInitialPos(): { x: number, s: number } | undefined {
+  const result = /^#(.*)\|(.*)$/.exec(document.location.hash);
+  if (result) {
+    return { x: parseFloat(result[1]), s: parseFloat(result[2]) };
+  }
+}
+
+function useDebounce<T>(initial: T, delay: number) {
+  const [value, setValue] = useState(initial);
+  const [delayedValue, setDelayedValue] = useState(initial);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDelayedValue(value), delay);
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  return [delayedValue, setValue] as const;
+}
 
 
 export default App;

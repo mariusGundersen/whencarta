@@ -1,15 +1,23 @@
-import React, { HTMLAttributes, ReactElement, useCallback, useRef, useState } from "react";
+import React, { HTMLAttributes, ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { debouncedAnimationFrame, getViewPos, PosPos, solve, Transform, translateY, viewToModel } from "./lib/panzoom";
 
 export interface Props extends HTMLAttributes<HTMLDivElement> {
   children(transform: Transform): ReactElement,
   initialTransform?: Transform,
-  limit(t: Transform): Transform
+  limit(t: Transform): Transform,
+  onTransform?: (pos: { x: number, s: number }) => void,
 }
 
 const defaultTransform = { tx: 0, ty: 0, sx: 1, sy: 1 };
 
-export default function PanZoom({ children, style, limit, initialTransform = defaultTransform, ...props }: Props) {
+export default function PanZoom({
+  children,
+  style,
+  limit,
+  initialTransform = defaultTransform,
+  onTransform,
+  ...props
+}: Props) {
   const pointers = useRef(new Map<number, PosPos>());
   const [transform, setTransform] = useState(initialTransform);
   const requestSingleAnimationFrame = useSingleAnimationFrame(() => {
@@ -48,7 +56,7 @@ export default function PanZoom({ children, style, limit, initialTransform = def
     e.preventDefault();
     e.stopPropagation();
 
-  }, [transform]);
+  }, [transform, limit]);
 
   const onWheel = useCallback(e => {
     const viewPos = getViewPos(e);
@@ -57,7 +65,12 @@ export default function PanZoom({ children, style, limit, initialTransform = def
 
     e.preventDefault();
     e.stopPropagation();
-  }, [transform]);
+  }, [transform, limit]);
+
+
+  useEffect(() => {
+    onTransform?.({ x: transform.tx, s: transform.sx });
+  }, [transform.tx, transform.sx]);
 
   return (
     <div
