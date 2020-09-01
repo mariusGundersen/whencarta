@@ -32,7 +32,7 @@ export default function Timeline({
   const [height, setHeight] = useState(300);
 
   const minZoom = -width / minYear;
-  const maxZoom = 1000;
+  const maxZoom = width;
 
   function limit({ tx, ty, sx, sy }: Transform) {
     sx = clamp(minZoom, sx, maxZoom);
@@ -79,32 +79,35 @@ export default function Timeline({
     <div className="Timeline" ref={ref}>
       {ref.current && <PanZoom transformation={transformation} limit={limit} onTransform={onChange}>
         {(transform) => {
-          const yOffset = -transform.ty / 100;
-
           const timeLeft = xToTime(0, transform);
           const timeRight = xToTime(width, transform);
+          const duration = timeRight - timeLeft;
+          const logDuration = Math.log10(duration);
 
           return (
             <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ border: '1px solid black' }}>
               <g>
-                {[...generate(Math.floor(yOffset), yOffset + 1.5)]
+                {[...generate(Math.floor(logDuration - 1), logDuration + 1)]
                   .flatMap((yPos) => {
-                    const t = (10 ** (- yPos)) * 1000;
-
-                    const y = transformY(yPos + 1, transform);
-                    return [...generate(Math.floor(timeLeft / t) * t, timeRight, t)].map(time => (
-                      <TimeMarker
-                        key={yPos + '-' + time}
-                        time={time}
-                        x={timeToX(time, transform)}
-                        y={y}
-                        height={height} />
-                    ));
+                    const t = 10 ** yPos;
+                    const y = transformY(4 - yPos, transform);
+                    return (
+                      <g key={yPos}>
+                        {[...generate(Math.floor(timeLeft / t) * t, timeRight, t)].map(time => (
+                          <TimeMarker
+                            key={yPos + '-' + time}
+                            time={time}
+                            x={timeToX(time, transform)}
+                            y={y}
+                            height={height} />
+                        ))}
+                      </g>
+                    );
                   })}
               </g>
               <g>
                 {events
-                  .filter(({ y }) => y > yOffset - 1 && y < yOffset + 3)
+                  .filter(({ y }) => y > logDuration - 3 && y < logDuration + 1)
                   .map(({ moments, y }) => (
                     <g key={y}>
                       {moments
@@ -113,7 +116,7 @@ export default function Timeline({
                           <TimeSpan
                             key={start}
                             label={label}
-                            y={y}
+                            y={3 - y}
                             transform={transform}
                             start={start}
                             end={end}
@@ -140,7 +143,7 @@ export default function Timeline({
 }
 
 function* generate(from: number, to: number, increment = 1) {
-  for (let i = from; i < to; i += increment) {
+  for (let i = from, c = 0; i < to && c < 100; i += increment, c++) {
     yield i;
   }
 }

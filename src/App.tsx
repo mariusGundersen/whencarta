@@ -136,11 +136,11 @@ function flattenChildren({ children, start, label, ...m }: MomentNode, y: number
       end: 'end' in m ? m.end : start + m.w,
       y
     },
-    ...children?.flatMap(m => flattenChildren(m, y + 1)) ?? []
+    ...children?.flatMap(m => flattenChildren(m, y - 1)) ?? []
   ];
 }
 
-const events = groupY(flattenChildren(root, -7));
+const events = groupY(flattenChildren(root, 10));
 
 
 export default function App() {
