@@ -59,6 +59,15 @@ export default function Timeline({
     })
   }, []);
 
+  useEffect(() => {
+    window.addEventListener('resize', () => {
+      if (!ref.current) return;
+      const size = ref.current.getBoundingClientRect();
+      setWidth(size.width);
+      setHeight(size.height);
+    });
+  }, [])
+
   const [transformation, setTransformation] = useState(() => ({
     tx: initialPos?.x ?? width,
     ty: -Math.log10(initialPos?.s ?? minZoom) * 100,

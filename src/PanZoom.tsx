@@ -116,5 +116,11 @@ export default function PanZoom({
 
 }
 export function useSingleAnimationFrame(func: () => void) {
-  return useRef(debouncedAnimationFrame(func));
+  const funcRef = useRef(func);
+
+  useEffect(() => {
+    funcRef.current = func;
+  }, [func]);
+
+  return useRef(debouncedAnimationFrame(funcRef.current));
 }
