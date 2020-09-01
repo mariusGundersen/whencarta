@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { timeToX, Transform, transformY, xToTime } from "./lib/panzoom";
+import { solveDouble, timeToX, Transform, transformY, xToTime } from "./lib/panzoom";
 import PanZoom from "./PanZoom";
 import { TimeMarker } from "./TimeMarker";
 import { TimeSpan } from "./TimeSpan";
@@ -51,18 +51,24 @@ export default function Timeline({
     const size = ref.current.getBoundingClientRect();
     setWidth(size.width);
     setHeight(size.height);
+    setTransformation({
+      tx: initialPos?.x ?? size.width,
+      ty: -Math.log10(initialPos?.s ?? minZoom) * 100,
+      sx: initialPos?.s ?? minZoom,
+      sy: 100
+    })
   }, []);
 
-  const initialTransform = {
+  const [transformation, setTransformation] = useState(() => ({
     tx: initialPos?.x ?? width,
     ty: -Math.log10(initialPos?.s ?? minZoom) * 100,
     sx: initialPos?.s ?? minZoom,
     sy: 100
-  };
+  }));
 
   return (
     <div className="Timeline" ref={ref}>
-      {ref.current && <PanZoom initialTransform={initialTransform} limit={limit} onTransform={onChange}>
+      {ref.current && <PanZoom transformation={transformation} limit={limit} onTransform={onChange}>
         {(transform) => {
           const yOffset = -transform.ty / 100;
 
@@ -78,7 +84,12 @@ export default function Timeline({
 
                     const y = transformY(yPos + 1, transform);
                     return [...generate(Math.floor(timeLeft / t) * t, timeRight, t)].map(time => (
-                      <TimeMarker key={yPos + '-' + time} time={time} x={timeToX(time, transform)} y={y} height={height} />
+                      <TimeMarker
+                        key={yPos + '-' + time}
+                        time={time}
+                        x={timeToX(time, transform)}
+                        y={y}
+                        height={height} />
                     ));
                   })}
               </g>
@@ -90,7 +101,23 @@ export default function Timeline({
                       {moments
                         .filter(({ start, end }) => start < timeRight && end > timeLeft)
                         .map(({ start, end, label }) => (
-                          <TimeSpan key={start} label={label} y={y} transform={transform} start={start} end={end} />)
+                          <TimeSpan
+                            key={start}
+                            label={label}
+                            y={y}
+                            transform={transform}
+                            start={start}
+                            end={end}
+                            onClick={() => setTransformation(solveDouble(
+                              {
+                                viewPos: { x: 0, y: 0 },
+                                modelPos: { x: start, y: 0 }
+                              },
+                              {
+                                viewPos: { x: width, y: 0 },
+                                modelPos: { x: end, y: 0 }
+                              }
+                            ))} />)
                         )}
                     </g>
                   ))}

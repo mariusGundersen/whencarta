@@ -7,14 +7,16 @@ export interface Props {
   transform: Transform
   start: number
   end: number
+  onClick?: () => void
 }
-export function TimeSpan({ label, start, end, transform, y }: Props): JSX.Element {
+export function TimeSpan({ label, start, end, transform, y, onClick }: Props): JSX.Element {
   const x = timeToX(start, transform);
   const width = (end - start) * transform.sx;
   const height = transform.sy;
 
   return (
-    <g transform={`translate(0, ${transformY(y, transform)})`}>
+    <g transform={`translate(0, ${transformY(y, transform)})`}
+      onClick={onClick}>
       <rect
         x={x}
         y={height / 4}

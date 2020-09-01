@@ -1,21 +1,21 @@
-import { PointerEvent } from "react";
+import { PointerEvent, WheelEvent } from "react";
 
 export interface Pos {
   x: number,
   y: number
 };
 export interface Transform {
-  tx: number,
-  ty: number,
-  sx: number,
-  sy: number
+  readonly tx: number,
+  readonly ty: number,
+  readonly sx: number,
+  readonly sy: number
 };
 export interface PosPos {
   modelPos: Pos,
   viewPos: Pos
 };
 
-export function getViewPos(event: PointerEvent): Pos {
+export function getViewPos(event: PointerEvent | WheelEvent): Pos {
   const rect = event.currentTarget.getBoundingClientRect();
 
   return {
@@ -175,6 +175,25 @@ export function debouncedAnimationFrame(func: () => void) {
   }
 }
 
-export function ease() {
+export type Easing<T extends string> = (d: number) => { value: Record<T, number>, done: boolean };
+
+export function ease<T extends string>(start: Record<T, number>, end: Record<T, number>, duration: number, ease: (v: number) => number = x => x): Easing<T> {
+  const diff: [T, number][] = Object.keys(end).map((k) => [k, end[k as T] - start[k as T]] as [T, number]);
+
+  return (d: number) => {
+    const now = ease(Math.min(1, d / duration));
+    return {
+      value: Object.fromEntries(diff.map(([k, v]) => [k, v * now + start[k]])) as unknown as Record<T, number>,
+      done: now >= 1
+    };
+  }
+}
+
+export function easeInOutQuad(x: number): number {
+  return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+}
+
+export function easeOutCubic(x: number): number {
+  return 1 - Math.pow(1 - x, 3);
 
 }
