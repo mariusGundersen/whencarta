@@ -32,7 +32,7 @@ export default function Timeline({
   const [height, setHeight] = useState(300);
 
   const minZoom = -width / minYear;
-  const maxZoom = width;
+  const maxZoom = width * 366;
 
   function limit({ tx, ty, sx, sy }: Transform) {
     sx = clamp(minZoom, sx, maxZoom);
@@ -83,19 +83,22 @@ export default function Timeline({
           const timeRight = xToTime(width, transform);
           const duration = timeRight - timeLeft;
           const logDuration = Math.log10(duration);
-
+          console.log(logDuration);
           return (
             <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ border: '1px solid black' }}>
               <g>
-                {[...generate(Math.floor(logDuration - 1), logDuration + 1)]
+                {[...generate(Math.max(-2, Math.floor(logDuration - 1)), logDuration + 1)]
                   .flatMap((yPos) => {
-                    const t = 10 ** yPos;
+                    const t = yPos === -1 ? 1 / 12 : yPos === -2 ? 1 / 12 / 31 : 10 ** yPos;
                     const y = transformY(4 - yPos, transform);
+                    const from = Math.floor(timeLeft / t) * t;
+                    const to = timeRight;
                     return (
                       <g key={yPos}>
-                        {[...generate(Math.floor(timeLeft / t) * t, timeRight, t)].map(time => (
+                        {[...generate(from, to, t)].map(time => (
                           <TimeMarker
                             key={yPos + '-' + time}
+                            yPos={yPos}
                             time={time}
                             x={timeToX(time, transform)}
                             y={y}
