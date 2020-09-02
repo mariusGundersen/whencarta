@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { solveDouble, timeToX, Transform, transformY, xToTime } from "./lib/panzoom";
+import { solveDouble, Transform, xToTime } from "./lib/panzoom";
 import PanZoom from "./PanZoom";
-import { TimeMarker } from "./TimeMarker";
-import { TimeSpan } from "./TimeSpan";
+import TimeMarkerRow, { generate } from "./TimeMarkerRow";
+import TimeSpan from "./TimeSpan";
 
 export interface Props {
   events: { y: number, moments: Moment[] }[],
@@ -83,30 +83,12 @@ export default function Timeline({
           const timeRight = xToTime(width, transform);
           const duration = timeRight - timeLeft;
           const logDuration = Math.log10(duration);
-          console.log(logDuration);
+
           return (
             <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{ border: '1px solid black' }}>
               <g>
                 {[...generate(Math.max(-2, Math.floor(logDuration - 1)), logDuration + 1)]
-                  .flatMap((yPos) => {
-                    const t = yPos === -1 ? 1 / 12 : yPos === -2 ? 1 / 12 / 31 : 10 ** yPos;
-                    const y = transformY(4 - yPos, transform);
-                    const from = Math.floor(timeLeft / t) * t;
-                    const to = timeRight;
-                    return (
-                      <g key={yPos}>
-                        {[...generate(from, to, t)].map(time => (
-                          <TimeMarker
-                            key={yPos + '-' + time}
-                            yPos={yPos}
-                            time={time}
-                            x={timeToX(time, transform)}
-                            y={y}
-                            height={height} />
-                        ))}
-                      </g>
-                    );
-                  })}
+                  .map((yPos) => <TimeMarkerRow key={yPos} yPos={yPos} transform={transform} timeFrom={timeLeft} timeTo={timeRight} height={height} />)}
               </g>
               <g>
                 {events
@@ -143,12 +125,6 @@ export default function Timeline({
       </PanZoom>}
     </div >
   );
-}
-
-function* generate(from: number, to: number, increment = 1) {
-  for (let i = from, c = 0; i < to && c < 100; i += increment, c++) {
-    yield i;
-  }
 }
 
 export const clamp = (min: number, x: number, max: number) => Math.min(max, Math.max(x, min));

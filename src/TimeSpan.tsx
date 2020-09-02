@@ -9,7 +9,7 @@ export interface Props {
   end: number
   onClick?: () => void
 }
-export function TimeSpan({ label, start, end, transform, y, onClick }: Props): JSX.Element {
+export default function TimeSpan({ label, start, end, transform, y, onClick }: Props): JSX.Element {
   const x = timeToX(start, transform);
   const width = (end - start) * transform.sx;
   const height = transform.sy;
