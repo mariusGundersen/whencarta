@@ -24,6 +24,7 @@
   grid-area: timeline
 }
 
-svg text {
+svg {
+  border: 1px solid black;
   user-select: none;
 }
