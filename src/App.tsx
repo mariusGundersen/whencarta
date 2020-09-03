@@ -168,7 +168,9 @@ export default function App() {
 function getInitialPos(): { x: number, s: number } | undefined {
   const result = /^#(.*)\|(.*)$/.exec(document.location.hash);
   if (result) {
-    return { x: parseFloat(result[1]), s: parseFloat(result[2]) };
+    const x = parseFloat(result[1]);
+    const s = parseFloat(result[2]);
+    return { x: x || 0, s: s || 1 };
   }
 }
 

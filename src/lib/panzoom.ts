@@ -4,12 +4,18 @@ export interface Pos {
   x: number,
   y: number
 };
+
 export interface Transform {
   readonly tx: number,
   readonly ty: number,
   readonly sx: number,
-  readonly sy: number
 };
+
+export interface TransformToPixels extends Transform {
+  readonly width: number,
+  readonly height: number,
+}
+
 export interface PosPos {
   modelPos: Pos,
   viewPos: Pos
@@ -19,17 +25,25 @@ export function getViewPos(event: PointerEvent | WheelEvent): Pos {
   const rect = event.currentTarget.getBoundingClientRect();
 
   return {
-    x: event.clientX - rect.x,
-    y: event.clientY - rect.y
+    x: (event.clientX - rect.x)/rect.width - 1/2,
+    y: (event.clientY - rect.y)/rect.height - 1/2,
   };
 }
 
-export function timeToX(x: number, transform: Transform): number {
-  return transform.sx * x + transform.tx;
+export function timeToX(time: number, {sx, tx}: Transform): number {
+  return sx * time + tx;
 }
 
-export function transformY(y: number, transform: Transform): number {
-  return transform.sy * y + transform.ty;
+export function timeToPixelX(time: number, transform: TransformToPixels): number {
+  return (timeToX(time, transform) + 1/2)*transform.width;
+}
+
+export function transformY(y: number, {ty}: Transform): number {
+  return y + ty;
+}
+
+export function transformToPixelY(y: number, transform: TransformToPixels): number {
+  return (transformY(y, transform) + 1/2)*transform.height;
 }
 
 export function modelToView(modelPos: Pos, transform: Transform): Pos {
@@ -42,7 +56,7 @@ export function modelToView(modelPos: Pos, transform: Transform): Pos {
 export function viewToModel(viewPos: Pos, transform: Transform): Pos {
   return {
     x: xToTime(viewPos.x, transform),
-    y: (viewPos.y - transform.ty) / transform.sy
+    y: viewPos.y - transform.ty
   };
 }
 
@@ -71,23 +85,21 @@ export function solve(transform: Transform, limit: (t: Transform) => Transform, 
 }
 
 export function translateY(viewPos: Pos, modelPos: Pos, ty: number): Transform {
-  const sx = 10 ** (-ty / 100);
+  const sx = 10 ** (-ty *3);
   return {
     tx: viewPos.x - modelPos.x * sx,
     ty,
     sx,
-    sy: 100
   };
 }
 
 export function solveSingle(viewPos: Pos, modelPos: Pos): Transform {
-  const ty = viewPos.y - modelPos.y * 100;
-  const sx = 10 ** (-ty / 100);
+  const ty = viewPos.y - modelPos.y;
+  const sx = 10 ** (-ty *3);
   return {
     tx: viewPos.x - modelPos.x * sx,
     ty,
     sx,
-    sy: 100
   };
 }
 
@@ -102,12 +114,11 @@ export function solveDouble(a: PosPos, b: PosPos): Transform {
 
   const sx = (b.viewPos.x - a.viewPos.x) / (b.modelPos.x - a.modelPos.x);
   const tx = a.viewPos.x - a.modelPos.x * sx;
-  const ty = -Math.log10(sx) * 100;
+  const ty = -Math.log10(sx) / 3;
   return {
     tx,
     ty,
     sx,
-    sy: 100
   };
 }
 
@@ -152,7 +163,6 @@ export function solveMultiple(positions: PosPos[]): Transform {
 
   return {
     sx: (inv00 * v0 + inv01 * v1 + inv02 * v2) / det,
-    sy: 100,
     tx: (inv01 * v0 + inv11 * v1 + inv12 * v2) / det,
     ty: (inv02 * v0 + inv12 * v1 + inv22 * v2) / det
   };

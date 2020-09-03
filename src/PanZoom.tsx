@@ -25,15 +25,15 @@ export default function PanZoom({
   const startEasing = useCallback((transformation) => {
     if (transformation.tx !== transform.tx
       || transformation.ty !== transform.ty
-      || transformation.sx !== transform.sx
-      || transformation.sy !== transform.sy) {
+      || transformation.sx !== transform.sx) {
       setEasing(() => ease(transform, transformation, 2_000, easeInOutQuad));
     }
   }, [transform]);
 
   useEffect(() => {
     startEasing(transformation);
-  }, [transformation.sx, transformation.sy, transformation.tx, transformation.ty]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transformation]);
 
   useEffect(() => {
     const start = window.performance.now();
@@ -69,7 +69,7 @@ export default function PanZoom({
 
     requestSingleAnimationFrame.current();
     e.preventDefault();
-  }, []);
+  }, [requestSingleAnimationFrame]);
 
   const onPointerUp = useCallback((e) => {
     if (!pointers.current.has(e.pointerId)) return;
@@ -99,6 +99,7 @@ export default function PanZoom({
 
   useEffect(() => {
     onTransform?.({ x: transform.tx, s: transform.sx });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transform.tx, transform.sx]);
 
   return (
