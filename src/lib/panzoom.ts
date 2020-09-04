@@ -42,6 +42,8 @@ export function getViewPos(event: PointerEvent | WheelEvent): Pos {
   };
 }
 
+export { xToViewX as pixelXToView };
+
 export function timeToX(time: number, { sx, tx }: Transform): number {
   return sx * time + tx;
 }
@@ -132,6 +134,23 @@ export function solveSingle(viewPos: Pos, modelPos: Pos): Transform {
     ty,
     sx,
   };
+}
+
+
+export function getTransform(start: number, end: number): Transform {
+  return solveDouble(
+    {
+      viewPos: { x: xToViewX(0), y: 0 },
+      modelPos: {
+        x: start,
+        y: 0,
+      },
+    },
+    {
+      viewPos: { x: xToViewX(1), y: 0 },
+      modelPos: { x: end, y: 0 },
+    }
+  );
 }
 
 export function solveDouble(a: PosPos, b: PosPos): Transform {

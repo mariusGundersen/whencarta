@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import TimeMarkerGroup from "./components/TimeMarkerGroup";
+import { clamp } from "./lib/clamp";
 import {
+  getTransform,
   pixelToModelY,
   pixelXToTime,
+  pixelXToView,
   scaleToY,
   Transform,
   TransformToPixels,
 } from "./lib/panzoom";
 import PanZoom from "./PanZoom";
+import TimeSpan from "./TimeSpan";
 
 export interface Props {
   events: { y: number; moments: Moment[] }[];
@@ -35,13 +39,17 @@ export default function Timeline({
   const [width, setWidth] = useState(1000);
   const [height, setHeight] = useState(300);
 
-  const minZoom = -width / minYear;
+  const minZoom = -1 / minYear;
   const maxZoom = width * 366;
 
   function limit({ tx, ty, sx }: Transform) {
-    //sx = clamp(minZoom, sx, maxZoom);
-    //tx = clamp(width - maxYear * sx, tx, -minYear * sx);
-    //ty = clamp(scaleToY(maxZoom), ty, scaleToY(minZoom));
+    sx = clamp(minZoom, sx, maxZoom);
+    tx = clamp(
+      pixelXToView(1) - maxYear * sx,
+      tx,
+      pixelXToView(0) - minYear * sx
+    );
+    ty = clamp(scaleToY(maxZoom), ty, scaleToY(minZoom));
     return {
       tx,
       ty,
@@ -49,16 +57,21 @@ export default function Timeline({
     };
   }
 
+  const [transformation, setTransformation] = useState(() =>
+    initialPos
+      ? {
+          tx: initialPos.x,
+          ty: scaleToY(initialPos.s),
+          sx: initialPos.s,
+        }
+      : getTransform(minYear, maxYear)
+  );
+
   useEffect(() => {
     if (!ref.current) return;
     const size = ref.current.getBoundingClientRect();
     setWidth(size.width);
     setHeight(size.height);
-    setTransformation({
-      tx: initialPos?.x ?? size.width,
-      ty: scaleToY(initialPos?.s ?? minZoom),
-      sx: initialPos?.s ?? minZoom,
-    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,16 +79,10 @@ export default function Timeline({
     window.addEventListener("resize", () => {
       if (!ref.current) return;
       const size = ref.current.getBoundingClientRect();
-      setWidth(size.width);
+      setWidth(window.innerWidth);
       setHeight(size.height);
     });
   }, []);
-
-  const [transformation, setTransformation] = useState(() => ({
-    tx: initialPos?.x ?? width,
-    ty: scaleToY(initialPos?.s ?? minZoom),
-    sx: initialPos?.s ?? minZoom,
-  }));
 
   return (
     <div className="Timeline" ref={ref}>
@@ -96,12 +103,13 @@ export default function Timeline({
             const scaleTop = pixelToModelY(0, transformToPixels);
             const scaleBottom = pixelToModelY(height, transformToPixels);
 
+            console.log(scaleTop, scaleBottom);
+
             return (
               <svg
                 viewBox={`0 0 ${width} ${height}`}
                 width={width}
                 height={height}
-                style={{ border: "1px solid black" }}
               >
                 <TimeMarkerGroup
                   timeLeft={timeLeft}
@@ -111,10 +119,8 @@ export default function Timeline({
                   transformToPixels={transformToPixels}
                 />
                 <g>
-                  {/*events
-                    .filter(
-                      ({ y }) => y > logDuration - 3 && y < logDuration + 1
-                    )
+                  {events
+                    .filter(({ y }) => scaleTop - 1 < y && y < scaleBottom)
                     .map(({ moments, y }) => (
                       <g key={y}>
                         {moments
@@ -126,28 +132,17 @@ export default function Timeline({
                             <TimeSpan
                               key={start}
                               label={label}
-                              y={3 - y}
+                              y={y}
                               transform={transformToPixels}
                               start={start}
                               end={end}
                               onClick={() =>
-                                setTransformation(
-                                  solveDouble(
-                                    {
-                                      viewPos: { x: 0, y: 0 },
-                                      modelPos: { x: start, y: 0 },
-                                    },
-                                    {
-                                      viewPos: { x: width, y: 0 },
-                                      modelPos: { x: end, y: 0 },
-                                    }
-                                  )
-                                )
+                                setTransformation(getTransform(start, end))
                               }
                             />
                           ))}
                       </g>
-                            ))*/}
+                    ))}
                 </g>
               </svg>
             );

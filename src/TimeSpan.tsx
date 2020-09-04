@@ -19,7 +19,7 @@ export default function TimeSpan({
 }: Props): JSX.Element {
   const x = timeToPixelX(start, transform);
   const width = timeToPixelX(end, transform) - x;
-  const height = (1 / 3) * transform.height;
+  const height = (1 / 2) * transform.height;
 
   return (
     <g
