@@ -1,4 +1,5 @@
 import { PointerEvent, WheelEvent } from "react";
+import createMappers from "./createMappers";
 
 export interface Pos {
   x: number;
@@ -29,12 +30,15 @@ export function scaleToY(s: number) {
   return -Math.log10(s);
 }
 
+const [yToPixelY, yToViewY] = createMappers([-0.5, 1.1], [0, 1]);
+const [xToPixelX, xToViewX] = createMappers([-1.2, 1.2], [0, 1]);
+
 export function getViewPos(event: PointerEvent | WheelEvent): Pos {
   const rect = event.currentTarget.getBoundingClientRect();
 
   return {
-    x: (event.clientX - rect.x) / rect.width - 1 / 2,
-    y: ((event.clientY - rect.y) * 2) / rect.height - 1 / 2,
+    x: xToViewX((event.clientX - rect.x) / rect.width),
+    y: yToViewY((event.clientY - rect.y) / rect.height),
   };
 }
 
@@ -46,24 +50,37 @@ export function timeToPixelX(
   time: number,
   transform: TransformToPixels
 ): number {
-  return (timeToX(time, transform) + 1 / 2) * transform.width;
+  return xToPixelX(timeToX(time, transform)) * transform.width;
 }
 
-export function transformY(y: number, { ty }: Transform): number {
+export function modelToViewY(y: number, { ty }: Transform): number {
   return y + ty;
 }
 
-export function transformToPixelY(
-  y: number,
-  transform: TransformToPixels
-): number {
-  return ((transformY(y, transform) + 1 / 2) * transform.height) / 2;
+export function modelToPixelY(y: number, transform: TransformToPixels): number {
+  return yToPixelY(modelToViewY(y, transform)) * transform.height;
+}
+
+export function xToTime(x: number, transform: Transform): number {
+  return (x - transform.tx) / transform.sx;
+}
+
+export function pixelXToTime(x: number, transform: TransformToPixels): number {
+  return xToTime(xToViewX(x / transform.width), transform);
+}
+
+export function viewToModelY(y: number, { ty }: Transform): number {
+  return y - ty;
+}
+
+export function pixelToModelY(y: number, transform: TransformToPixels): number {
+  return viewToModelY(yToViewY(y / transform.height), transform);
 }
 
 export function modelToView(modelPos: Pos, transform: Transform): Pos {
   return {
     x: timeToX(modelPos.x, transform),
-    y: transformY(modelPos.y, transform),
+    y: modelToViewY(modelPos.y, transform),
   };
 }
 
@@ -72,10 +89,6 @@ export function viewToModel(viewPos: Pos, transform: Transform): Pos {
     x: xToTime(viewPos.x, transform),
     y: viewPos.y - transform.ty,
   };
-}
-
-export function xToTime(x: number, transform: Transform): number {
-  return (x - transform.tx) / transform.sx;
 }
 
 export function solve(

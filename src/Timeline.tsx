@@ -1,14 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  pixelToModelY,
+  pixelXToTime,
   scaleToY,
-  solveDouble,
   Transform,
   TransformToPixels,
-  xToTime,
 } from "./lib/panzoom";
 import PanZoom from "./PanZoom";
 import TimeMarkerRow, { generate } from "./TimeMarkerRow";
-import TimeSpan from "./TimeSpan";
 
 export interface Props {
   events: { y: number; moments: Moment[] }[];
@@ -92,12 +91,12 @@ export default function Timeline({
               width,
               height,
             };
-            const timeLeft = xToTime(-0.5, transform);
-            const timeRight = xToTime(0.5, transform);
-            const duration = timeRight - timeLeft;
-            const logDuration = Math.log10(duration);
+            const timeLeft = pixelXToTime(0, transformToPixels);
+            const timeRight = pixelXToTime(width, transformToPixels);
+            const scaleTop = pixelToModelY(0, transformToPixels);
+            const scaleBottom = pixelToModelY(height, transformToPixels);
 
-            console.log(transform.ty, Math.floor(transform.ty - 0.5));
+            console.log(transform.ty, scaleTop, scaleBottom);
 
             return (
               <svg
@@ -107,23 +106,20 @@ export default function Timeline({
                 style={{ border: "1px solid black" }}
               >
                 <g>
-                  {[
-                    ...generate(
-                      Math.max(-2, Math.floor(transform.ty - 0.5)),
-                      transform.ty + 2
-                    ),
-                  ].map((yPos) => (
-                    <TimeMarkerRow
-                      key={yPos}
-                      yPos={yPos}
-                      transform={transformToPixels}
-                      timeFrom={timeLeft}
-                      timeTo={timeRight}
-                    />
-                  ))}
+                  {[...generate(Math.floor(scaleTop), scaleBottom)].map(
+                    (yPos) => (
+                      <TimeMarkerRow
+                        key={yPos}
+                        yPos={-yPos}
+                        transform={transformToPixels}
+                        timeFrom={timeLeft}
+                        timeTo={timeRight}
+                      />
+                    )
+                  )}
                 </g>
                 <g>
-                  {events
+                  {/*events
                     .filter(
                       ({ y }) => y > logDuration - 3 && y < logDuration + 1
                     )
@@ -159,7 +155,7 @@ export default function Timeline({
                             />
                           ))}
                       </g>
-                    ))}
+                            ))*/}
                 </g>
               </svg>
             );

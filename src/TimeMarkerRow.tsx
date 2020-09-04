@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  timeToPixelX,
-  TransformToPixels,
-  transformToPixelY,
-} from "./lib/panzoom";
+import { modelToPixelY, timeToPixelX, TransformToPixels } from "./lib/panzoom";
 import { clamp } from "./Timeline";
 import TimeMarker from "./TimeMarker";
 
@@ -21,13 +17,13 @@ export default function TimeMarkerRow({
   transform,
 }: Props) {
   const height = transform.height;
-  const y = transformToPixelY(-yPos, transform);
+  const y = modelToPixelY(-yPos, transform);
   const opacity = normalize(y / height, 1, 0.9);
 
   if (yPos > 0) {
     const t = 10 ** yPos;
     return (
-      <g opacity={opacity}>
+      <g opacity={opacity} data-key={yPos}>
         {[...generate(Math.floor(timeFrom / t) * t, timeTo, t)].map((time) => (
           <TimeMarker
             key={time}
@@ -41,7 +37,7 @@ export default function TimeMarkerRow({
     );
   } else if (yPos === 0) {
     const year = Math.floor(timeFrom);
-    const dx = (1 / 2) * transform.sx * transform.width;
+    const dx = 0; //(1 / 2) * transform.sx * transform.width;
     return (
       <g opacity={opacity}>
         {[...generate(year, timeTo, 1)].map((time) => (
@@ -60,7 +56,7 @@ export default function TimeMarkerRow({
     const t = 1 / 12;
     const year = Math.floor(timeFrom);
     const month = Math.floor((timeFrom % 1) * 12);
-    const dx = (t / 2) * transform.sx * transform.width;
+    const dx = 0; //(t / 2) * transform.sx * transform.width;
     return (
       <g opacity={opacity}>
         {[...generate(Math.floor(timeFrom * 12) / 12, timeTo, t)].map(
@@ -85,8 +81,7 @@ export default function TimeMarkerRow({
       <g opacity={opacity}>
         {[...generate(year + month / 12, timeTo, t)].flatMap((time, index) => {
           const daysInMonth = new Date(year, month + index + 1, 0).getDate();
-          const dx =
-            (1 / 12 / daysInMonth / 2) * transform.sx * transform.width;
+          const dx = 0; //            (1 / 12 / daysInMonth / 2) * transform.sx * transform.width;
           return [...generate(0, daysInMonth, 1)].map((day) => (
             <TimeMarker
               key={time + (day * t) / daysInMonth}
