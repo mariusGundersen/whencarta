@@ -18,8 +18,7 @@ export default function TimeMarker({ x, dx = 0, y, height, label }: Props) {
         textAnchor="middle"
         stroke="darkblue"
         fill="darkblue"
-        dominantBaseline="middle"
-        style={{ background: "white" }}
+        dominantBaseline="hanging"
       >
         {label}
       </text>

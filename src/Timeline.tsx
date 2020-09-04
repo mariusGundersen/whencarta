@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import TimeMarkerGroup from "./components/TimeMarkerGroup";
 import {
   pixelToModelY,
   pixelXToTime,
@@ -7,7 +8,6 @@ import {
   TransformToPixels,
 } from "./lib/panzoom";
 import PanZoom from "./PanZoom";
-import TimeMarkerRow, { generate } from "./TimeMarkerRow";
 
 export interface Props {
   events: { y: number; moments: Moment[] }[];
@@ -96,8 +96,6 @@ export default function Timeline({
             const scaleTop = pixelToModelY(0, transformToPixels);
             const scaleBottom = pixelToModelY(height, transformToPixels);
 
-            console.log(transform.ty, scaleTop, scaleBottom);
-
             return (
               <svg
                 viewBox={`0 0 ${width} ${height}`}
@@ -105,19 +103,13 @@ export default function Timeline({
                 height={height}
                 style={{ border: "1px solid black" }}
               >
-                <g>
-                  {[...generate(Math.floor(scaleTop), scaleBottom)].map(
-                    (yPos) => (
-                      <TimeMarkerRow
-                        key={yPos}
-                        yPos={-yPos}
-                        transform={transformToPixels}
-                        timeFrom={timeLeft}
-                        timeTo={timeRight}
-                      />
-                    )
-                  )}
-                </g>
+                <TimeMarkerGroup
+                  timeLeft={timeLeft}
+                  timeRight={timeRight}
+                  scaleTop={scaleTop}
+                  scaleBottom={scaleBottom}
+                  transformToPixels={transformToPixels}
+                />
                 <g>
                   {/*events
                     .filter(
@@ -165,6 +157,3 @@ export default function Timeline({
     </div>
   );
 }
-
-export const clamp = (min: number, x: number, max: number) =>
-  Math.min(max, Math.max(x, min));
