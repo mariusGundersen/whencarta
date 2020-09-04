@@ -1,61 +1,103 @@
 import React from "react";
-import { timeToPixelX, TransformToPixels, transformToPixelY } from "./lib/panzoom";
+import {
+  timeToPixelX,
+  TransformToPixels,
+  transformToPixelY,
+} from "./lib/panzoom";
 import { clamp } from "./Timeline";
 import TimeMarker from "./TimeMarker";
 
 export interface Props {
-  yPos: number,
-  transform: TransformToPixels,
-  timeFrom: number,
-  timeTo: number
+  yPos: number;
+  transform: TransformToPixels;
+  timeFrom: number;
+  timeTo: number;
 }
 
-export default function TimeMarkerRow({ yPos, timeFrom, timeTo, transform }: Props) {
+export default function TimeMarkerRow({
+  yPos,
+  timeFrom,
+  timeTo,
+  transform,
+}: Props) {
   const height = transform.height;
-  const y = transformToPixelY(-yPos/3-1/3, transform);
-  const opacity = normalize(y / height, 0.9, 0.8);
+  const y = transformToPixelY(-yPos, transform);
+  const opacity = normalize(y / height, 1, 0.9);
 
   if (yPos > 0) {
     const t = 10 ** yPos;
     return (
       <g opacity={opacity}>
-        {[...generate(Math.floor(timeFrom / t) * t, timeTo, t)]
-          .map(time => (<TimeMarker key={time} x={timeToPixelX(time, transform)} y={y} label={format(time)} height={height} />))}
+        {[...generate(Math.floor(timeFrom / t) * t, timeTo, t)].map((time) => (
+          <TimeMarker
+            key={time}
+            x={timeToPixelX(time, transform)}
+            y={y}
+            label={format(time)}
+            height={height}
+          />
+        ))}
       </g>
     );
   } else if (yPos === 0) {
     const year = Math.floor(timeFrom);
-    const dx = 1 / 2 * transform.sx*transform.width;
+    const dx = (1 / 2) * transform.sx * transform.width;
     return (
       <g opacity={opacity}>
-        {[...generate(year, timeTo, 1)]
-          .map(time => (<TimeMarker key={time} x={timeToPixelX(time, transform)} dx={dx} y={y} label={time} height={height} />))}
+        {[...generate(year, timeTo, 1)].map((time) => (
+          <TimeMarker
+            key={time}
+            x={timeToPixelX(time, transform)}
+            dx={dx}
+            y={y}
+            label={time}
+            height={height}
+          />
+        ))}
       </g>
     );
   } else if (yPos === -1) {
     const t = 1 / 12;
     const year = Math.floor(timeFrom);
-    const month = Math.floor(timeFrom % 1 * 12);
-    const dx = t / 2 * transform.sx*transform.width;
+    const month = Math.floor((timeFrom % 1) * 12);
+    const dx = (t / 2) * transform.sx * transform.width;
     return (
       <g opacity={opacity}>
-        {[...generate(Math.floor(timeFrom * 12) / 12, timeTo, t)]
-          .map((time, index) => (<TimeMarker key={time} x={timeToPixelX(time, transform)} dx={dx} y={y} label={formatMonth(month + index, year)} height={height} />))}
+        {[...generate(Math.floor(timeFrom * 12) / 12, timeTo, t)].map(
+          (time, index) => (
+            <TimeMarker
+              key={time}
+              x={timeToPixelX(time, transform)}
+              dx={dx}
+              y={y}
+              label={formatMonth(month + index, year)}
+              height={height}
+            />
+          )
+        )}
       </g>
     );
   } else if (yPos === -2) {
     const t = 1 / 12;
     const year = Math.floor(timeFrom);
-    const month = Math.floor(timeFrom % 1 * 12);
+    const month = Math.floor((timeFrom % 1) * 12);
     return (
       <g opacity={opacity}>
-        {[...generate(year + month / 12, timeTo, t)]
-          .flatMap((time, index) => {
-            const daysInMonth = new Date(year, month + index + 1, 0).getDate();
-            const dx = 1 / 12 / daysInMonth / 2 * transform.sx*transform.width;
-            return [...generate(0, daysInMonth, 1)]
-              .map((day) => (<TimeMarker key={time + day * t / daysInMonth} x={timeToPixelX(time + day * t / daysInMonth, transform)} dx={dx} y={y} label={day + 1} height={height} />))
-          })}
+        {[...generate(year + month / 12, timeTo, t)].flatMap((time, index) => {
+          const daysInMonth = new Date(year, month + index + 1, 0).getDate();
+          const dx =
+            (1 / 12 / daysInMonth / 2) * transform.sx * transform.width;
+          return [...generate(0, daysInMonth, 1)].map((day) => (
+            <TimeMarker
+              key={time + (day * t) / daysInMonth}
+              x={timeToPixelX(time + (day * t) / daysInMonth, transform)}
+              dx={dx}
+              y={y}
+              label={day + 1}
+              height={height}
+            />
+          ));
+        })}
       </g>
     );
   } else {
@@ -73,21 +115,20 @@ export function* generate(from: number, to: number, increment = 1) {
   }
 }
 
-const monthName = Intl.DateTimeFormat('en-US', { month: 'long' });
+const monthName = Intl.DateTimeFormat("en-US", { month: "long" });
 
 function formatMonth(month: number, year: number) {
   return monthName.format(new Date(year, month));
 }
 
-
 function format(n: number) {
   const abs = Math.abs(n);
   if (abs >= 1_000_000_000) {
-    return n / 1_000_000_000 + ' billion';
+    return n / 1_000_000_000 + " billion";
   } else if (abs >= 1_000_000) {
-    return n / 1_000_000 + ' million';
+    return n / 1_000_000 + " million";
   } else if (abs >= 10_000) {
-    return n / 1_000 + ' millennia';
+    return n / 1_000 + " millennia";
   } else {
     return n;
   }
