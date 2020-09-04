@@ -1,35 +1,46 @@
 import React from "react";
-import { timeToX, Transform, transformY } from "./lib/panzoom";
+import { modelToPixelY, timeToPixelX, TransformToPixels } from "./lib/panzoom";
 
 export interface Props {
-  label: string
-  y: number
-  transform: Transform
-  start: number
-  end: number
-  onClick?: () => void
+  label: string;
+  y: number;
+  transform: TransformToPixels;
+  start: number;
+  end: number;
+  onClick?: () => void;
 }
-export default function TimeSpan({ label, start, end, transform, y, onClick }: Props): JSX.Element {
-  const x = timeToX(start, transform);
-  const width = (end - start) * transform.sx;
-  const height = transform.sy;
+export default function TimeSpan({
+  label,
+  start,
+  end,
+  transform,
+  y,
+  onClick,
+}: Props): JSX.Element {
+  const x = timeToPixelX(start, transform);
+  const width = timeToPixelX(end, transform) - x;
+  const height = (1 / 2) * transform.height;
 
   return (
-    <g transform={`translate(0, ${transformY(y, transform)})`}
-      onClick={onClick}>
+    <g
+      transform={`translate(0, ${modelToPixelY(y, transform)})`}
+      onClick={onClick}
+    >
       <rect
         x={x}
         y={height / 4}
         width={width}
         height={height / 2}
         fill="#36d"
-        stroke="white" />
+        stroke="white"
+      />
       <text
         fill="white"
         x={Math.max(0, x)}
         y={height / 2}
-        dominantBaseline="middle">
-        {x < 0 ? '⇠' + label : label}
+        dominantBaseline="middle"
+      >
+        {x < 0 ? "⇠" + label : label}
       </text>
     </g>
   );
