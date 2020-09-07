@@ -136,7 +136,6 @@ export function solveSingle(viewPos: Pos, modelPos: Pos): Transform {
   };
 }
 
-
 export function getTransform(start: number, end: number): Transform {
   return solveDouble(
     {
@@ -225,16 +224,27 @@ export function toMatrix({ tx: x, ty: y, sx: s }: Transform) {
   return `matrix(${s}, 0, 0, ${s}, ${x}, ${y})`;
 }
 
-export function debouncedAnimationFrame(func: () => void) {
-  let requested = false;
-  return () => {
-    if (!requested) {
-      requested = true;
-      requestAnimationFrame(() => {
-        requested = false;
-        func();
-      });
+export function debouncedAnimationFrame() {
+  let savedFunc: undefined | ((d: number) => void);
+  let savedCancel: () => void;
+  return (func: (d: number) => void): (() => void) => {
+    if (savedFunc) {
+      savedFunc = func;
+      return savedCancel;
     }
+
+    savedFunc = func;
+    const id = requestAnimationFrame((d) => {
+      let func = savedFunc;
+      savedFunc = undefined;
+      func!(d);
+    });
+
+    savedCancel = () => {
+      savedFunc = undefined;
+      cancelAnimationFrame(id);
+    };
+    return savedCancel;
   };
 }
 

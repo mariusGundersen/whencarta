@@ -21,6 +21,7 @@ export default function PanZoom({
   const pointers = useRef(new Map<number, PosPos>());
   const [transform, setTransform] = useState(transformation);
   const [easing, setEasing] = useState(() => ease(transform, transform, 0));
+  const requestSingleAnimationFrame = useSingleAnimationFrame();
 
   const startEasing = useCallback((transformation) => {
     if (transformation.tx !== transform.tx
@@ -29,6 +30,10 @@ export default function PanZoom({
       setEasing(() => ease(transform, transformation, 2_000, easeInOutQuad));
     }
   }, [transform]);
+
+  const updateDrag = useCallback(() => {
+    setTransform(t => solve(t, limit, ...pointers.current.values()));
+  }, [limit]);
 
   useEffect(() => {
     startEasing(transformation);
@@ -41,16 +46,12 @@ export default function PanZoom({
       const { value, done } = easing(d - start);
       setTransform(value);
       if (!done) {
-        handle = requestAnimationFrame(frame);
+        cancelAnimationFrame = requestSingleAnimationFrame.current(frame);
       }
     };
-    let handle = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(handle);
-  }, [easing])
-
-  const requestSingleAnimationFrame = useSingleAnimationFrame(() => {
-    setTransform(t => solve(t, limit, ...pointers.current.values()));
-  });
+    let cancelAnimationFrame = requestSingleAnimationFrame.current(frame);
+    return cancelAnimationFrame;
+  }, [easing, requestSingleAnimationFrame]);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     const viewPos = getViewPos(e);
@@ -67,9 +68,9 @@ export default function PanZoom({
     const viewPos = getViewPos(e);
     pointer.viewPos = viewPos;
 
-    requestSingleAnimationFrame.current();
+    requestSingleAnimationFrame.current(updateDrag);
     e.preventDefault();
-  }, [requestSingleAnimationFrame]);
+  }, [requestSingleAnimationFrame, updateDrag]);
 
   const onPointerUp = useCallback((e) => {
     if (!pointers.current.has(e.pointerId)) return;
@@ -116,12 +117,6 @@ export default function PanZoom({
   )
 
 }
-export function useSingleAnimationFrame(func: () => void) {
-  const funcRef = useRef(func);
-
-  useEffect(() => {
-    funcRef.current = func;
-  }, [func]);
-
-  return useRef(debouncedAnimationFrame(funcRef.current));
+export function useSingleAnimationFrame() {
+  return useRef(debouncedAnimationFrame());
 }
