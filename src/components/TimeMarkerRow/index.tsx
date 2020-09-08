@@ -1,7 +1,7 @@
 import React from "react";
-import { generate } from "../lib/generate";
-import { normalize } from "../lib/normalize";
-import { modelToPixelY, timeToPixelX, TransformToPixels } from "../lib/panzoom";
+import { generate } from "../../lib/generate";
+import { normalize } from "../../lib/normalize";
+import { modelToPixelY, timeToPixelX, TransformToPixels } from "../../lib/panzoom";
 import { DayMarkerGroup } from "./DayMarkerGroup";
 import { MonthMarker } from "./MonthMarker";
 import TimeMarker from "./TimeMarker";

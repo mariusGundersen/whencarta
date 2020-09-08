@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
-import { timeToPixelX, TransformToPixels } from "../lib/panzoom";
+import { format } from ".";
+import { timeToPixelX, TransformToPixels } from "../../lib/panzoom";
 import TimeMarker from "./TimeMarker";
-import { format } from "./TimeMarkerRow";
 
 export interface Props {
   time: number;

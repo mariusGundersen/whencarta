@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import TimeMarkerGroup from "./components/TimeMarkerGroup";
-import { clamp } from "./lib/clamp";
+import { clamp } from "../lib/clamp";
 import {
   getTransform,
   pixelToModelY,
@@ -8,9 +7,10 @@ import {
   pixelXToView,
   scaleToY,
   Transform,
-  TransformToPixels,
-} from "./lib/panzoom";
+  TransformToPixels
+} from "../lib/panzoom";
 import PanZoom from "./PanZoom";
+import TimeMarkerGroup from "./TimeMarkerRow/TimeMarkerGroup";
 import TimeSpan from "./TimeSpan";
 
 export interface Props {

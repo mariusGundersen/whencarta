@@ -1,7 +1,7 @@
 import React from "react";
-import { generate } from "../lib/generate";
-import { TransformToPixels } from "../lib/panzoom";
-import TimeMarkerRow from "./TimeMarkerRow";
+import TimeMarkerRow from ".";
+import { generate } from "../../lib/generate";
+import { TransformToPixels } from "../../lib/panzoom";
 
 export interface Props {
   timeLeft: number;

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { generate } from "../lib/generate";
-import { timeToPixelX, TransformToPixels } from "../lib/panzoom";
+import { generate } from "../../lib/generate";
+import { timeToPixelX, TransformToPixels } from "../../lib/panzoom";
 import TimeMarker from "./TimeMarker";
 
 export interface Props {

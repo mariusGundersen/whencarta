@@ -1,5 +1,5 @@
 import React, { HTMLAttributes, ReactElement, useCallback, useEffect, useRef, useState } from "react";
-import { debouncedAnimationFrame, ease, easeInOutQuad, easeOutCubic, getViewPos, PosPos, solve, Transform, translateY, viewToModel } from "./lib/panzoom";
+import { debouncedAnimationFrame, ease, easeInOutQuad, easeOutCubic, getViewPos, PosPos, solve, Transform, translateY, viewToModel } from "../lib/panzoom";
 
 export interface Props extends HTMLAttributes<HTMLDivElement> {
   children(transform: Transform): ReactElement,

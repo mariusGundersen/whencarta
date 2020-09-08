@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import "./App.css";
-import Timeline, { Moment } from "./Timeline";
+import Timeline, { Moment } from "./components/Timeline";
+import { useDebounce } from "./lib/useDebounce";
 
 interface MomentWithWidth {
   start: number;
@@ -234,18 +235,6 @@ function getInitialPos(): { x: number; s: number } | undefined {
     const s = parseFloat(result[2]);
     return { x: x || 0, s: s || 1 };
   }
-}
-
-function useDebounce<T>(initial: T, delay: number) {
-  const [value, setValue] = useState(initial);
-  const [delayedValue, setDelayedValue] = useState(initial);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setDelayedValue(value), delay);
-    return () => clearTimeout(timeout);
-  }, [value, delay]);
-
-  return [delayedValue, setValue] as const;
 }
 
 function groupY(

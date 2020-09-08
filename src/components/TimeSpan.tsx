@@ -1,5 +1,5 @@
 import React from "react";
-import { modelToPixelY, timeToPixelX, TransformToPixels } from "./lib/panzoom";
+import { modelToPixelY, timeToPixelX, TransformToPixels } from "../lib/panzoom";
 
 export interface Props {
   label: string;
