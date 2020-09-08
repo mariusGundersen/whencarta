@@ -1,11 +1,16 @@
 import React from "react";
-import { generate } from "../../lib/generate";
-import { normalize } from "../../lib/normalize";
-import { modelToPixelY, timeToPixelX, TransformToPixels } from "../../lib/panzoom";
-import { DayMarkerGroup } from "./DayMarkerGroup";
-import { MonthMarker } from "./MonthMarker";
+import normalize from "../../lib/normalize";
+import {
+  durationToPixelWidth,
+  modelToPixelY,
+  timeToPixelX,
+  TransformToPixels,
+} from "../../lib/panzoom";
+import range from "../../lib/range";
+import DayMarkerGroup from "./DayMarkerGroup";
+import MonthMarker from "./MonthMarker";
 import TimeMarker from "./TimeMarker";
-import { YearsMarker } from "./YearsMarker";
+import YearsMarker from "./YearsMarker";
 
 export interface Props {
   scale: number;
@@ -21,26 +26,25 @@ export default function TimeMarkerRow({
   transform,
 }: Props) {
   const height = transform.height;
-  const y = modelToPixelY(-scale, transform);
+  const y = modelToPixelY(scale, transform);
   const opacity = normalize(y / height, 1, 0.9);
 
-  if (scale > 0) {
-    const delta = 10 ** scale;
+  if (scale < 0) {
+    const delta = 10 ** -scale;
     const from = Math.floor(timeFrom / delta) * delta;
     return (
-      <g opacity={opacity} data-key={scale}>
-        {[...generate(from, timeTo, delta)].map((time) => (
+      <g opacity={opacity} data-scale={scale}>
+        {range(from, timeTo, delta).map((time) => (
           <YearsMarker key={time} time={time} transform={transform} y={y} />
         ))}
       </g>
     );
   } else if (scale === 0) {
     const year = Math.floor(timeFrom);
-    const dx =
-      timeToPixelX(year + 1 / 2, transform) - timeToPixelX(year, transform);
+    const dx = durationToPixelWidth(1 / 2, transform);
     return (
-      <g opacity={opacity} data-key={scale}>
-        {[...generate(year, timeTo, 1)].map((time) => (
+      <g opacity={opacity} data-scale={scale}>
+        {range(year, timeTo, 1).map((time) => (
           <TimeMarker
             key={time}
             x={timeToPixelX(time, transform)}
@@ -52,37 +56,32 @@ export default function TimeMarkerRow({
         ))}
       </g>
     );
-  } else if (scale === -1) {
+  } else {
     const delta = 1 / 12;
     const year = Math.floor(timeFrom);
     const month = Math.floor((timeFrom % 1) / delta);
     const from = Math.floor(timeFrom * 12) / 12;
-    const dx =
-      timeToPixelX(from + delta / 2, transform) - timeToPixelX(from, transform);
-    return (
-      <g opacity={opacity}>
-        {[...generate(from, timeTo, delta)].map((time, index) => (
-          <MonthMarker
-            key={time}
-            time={time}
-            transform={transform}
-            dx={dx}
-            y={y}
-            month={month + index}
-            year={year}
-          />
-        ))}
-      </g>
-    );
-  } else if (scale === -2) {
-    const delta = 1 / 12;
-    const year = Math.floor(timeFrom);
-    const month = Math.floor((timeFrom % 1) / delta);
-    const from = Math.floor(timeFrom * 12) / 12;
-    return (
-      <g opacity={opacity}>
-        {[...generate(from, timeTo, delta)].flatMap((time, index) => {
-          return (
+    if (scale === 1) {
+      const dx = durationToPixelWidth(delta / 2, transform);
+      return (
+        <g opacity={opacity}>
+          {range(from, timeTo, delta).map((time, index) => (
+            <MonthMarker
+              key={time}
+              time={time}
+              transform={transform}
+              dx={dx}
+              y={y}
+              month={month + index}
+              year={year}
+            />
+          ))}
+        </g>
+      );
+    } else if (scale === 2) {
+      return (
+        <g opacity={opacity}>
+          {range(from, timeTo, delta).flatMap((time, index) => (
             <DayMarkerGroup
               key={month + index}
               year={year}
@@ -93,12 +92,12 @@ export default function TimeMarkerRow({
               timeFrom={timeFrom}
               timeTo={timeTo}
             />
-          );
-        })}
-      </g>
-    );
-  } else {
-    return <g></g>;
+          ))}
+        </g>
+      );
+    } else {
+      return <g></g>;
+    }
   }
 }
 

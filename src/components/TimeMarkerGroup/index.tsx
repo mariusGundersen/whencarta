@@ -1,6 +1,6 @@
 import React from "react";
-import { generate } from "../../lib/generate";
 import { TransformToPixels } from "../../lib/panzoom";
+import range from "../../lib/range";
 import TimeMarkerRow from "./TimeMarkerRow";
 
 export interface Props {
@@ -18,12 +18,13 @@ export default function TimeMarkerGroup({
   scaleBottom,
   transformToPixels,
 }: Props) {
+  const scales = range(Math.floor(scaleTop), scaleBottom);
   return (
     <g>
-      {[...generate(Math.floor(scaleTop), scaleBottom)].map((scale) => (
+      {scales.map((scale) => (
         <TimeMarkerRow
           key={scale}
-          scale={-scale}
+          scale={scale}
           transform={transformToPixels}
           timeFrom={timeLeft}
           timeTo={timeRight}

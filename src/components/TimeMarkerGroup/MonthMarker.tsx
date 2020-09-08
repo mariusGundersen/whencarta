@@ -12,7 +12,7 @@ export interface Props {
   year: number;
 }
 
-export function MonthMarker({
+export default function MonthMarker({
   time,
   transform,
   dx,

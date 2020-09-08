@@ -55,6 +55,13 @@ export function timeToPixelX(
   return xToPixelX(timeToX(time, transform)) * transform.width;
 }
 
+export function durationToPixelWidth(
+  duration: number,
+  transform: TransformToPixels
+): number {
+  return (xToPixelX(timeToX(duration, transform)) - xToPixelX(timeToX(0, transform))) * transform.width;
+}
+
 export function modelToViewY(y: number, { ty }: Transform): number {
   return y + ty;
 }
@@ -237,7 +244,7 @@ export function debouncedAnimationFrame() {
     const id = requestAnimationFrame((d) => {
       let func = savedFunc;
       savedFunc = undefined;
-      func!(d);
+      func?.(d);
     });
 
     savedCancel = () => {

@@ -1,6 +1,10 @@
 import React, { useMemo } from "react";
-import { generate } from "../../lib/generate";
-import { timeToPixelX, TransformToPixels } from "../../lib/panzoom";
+import {
+  durationToPixelWidth,
+  timeToPixelX,
+  TransformToPixels,
+} from "../../lib/panzoom";
+import range from "../../lib/range";
 import TimeMarker from "./TimeMarker";
 
 export interface Props {
@@ -13,7 +17,7 @@ export interface Props {
   timeTo: number;
 }
 
-export function DayMarkerGroup({
+export default function DayMarkerGroup({
   year,
   month,
   monthTime,
@@ -24,12 +28,10 @@ export function DayMarkerGroup({
 }: Props) {
   const daysInMonth = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const yearFraction = 1 / 12 / daysInMonth;
-  const dx =
-    timeToPixelX(monthTime + 0.5 * yearFraction, transform) -
-    timeToPixelX(monthTime, transform);
+  const dx = durationToPixelWidth(0.5 * yearFraction, transform);
   return (
     <>
-      {[...generate(0, daysInMonth, 1)].map((day) => {
+      {range(0, daysInMonth, 1).map((day) => {
         const time = monthTime + day * yearFraction;
         if (time < timeFrom - yearFraction || time > timeTo) return null;
         const x = timeToPixelX(time, transform);

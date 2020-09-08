@@ -9,7 +9,7 @@ export interface Props {
   y: number;
 }
 
-export function YearsMarker({ time, transform, y }: Props) {
+export default function YearsMarker({ time, transform, y }: Props) {
   const label = useMemo(() => format(time), [time]);
   return (
     <TimeMarker

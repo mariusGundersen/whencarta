@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import "./App.css";
-import Timeline, { Moment } from "./components/Timeline";
-import { useDebounce } from "./lib/useDebounce";
+import Timeline from "./components/Timeline";
+import { Moment } from "./components/TimeSpanGroup";
+import useDebounce from "./lib/useDebounce";
 
 interface MomentWithWidth {
   start: number;

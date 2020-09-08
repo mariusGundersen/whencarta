@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { clamp } from "../lib/clamp";
+import clamp from "../lib/clamp";
 import {
   getTransform,
   pixelToModelY,
@@ -7,11 +7,11 @@ import {
   pixelXToView,
   scaleToY,
   Transform,
-  TransformToPixels
+  TransformToPixels,
 } from "../lib/panzoom";
 import PanZoom from "./PanZoom";
 import TimeMarkerGroup from "./TimeMarkerGroup";
-import TimeSpan from "./TimeSpan";
+import TimeSpanGroup, { Moment } from "./TimeSpanGroup";
 
 export interface Props {
   events: { y: number; moments: Moment[] }[];
@@ -19,12 +19,6 @@ export interface Props {
   maxYear: number;
   initialPos?: { x: number; s: number };
   onChange?: (pos: { x: number; s: number }) => void;
-}
-
-export interface Moment {
-  start: number;
-  end: number;
-  label: string;
 }
 
 export default function Timeline({
@@ -118,32 +112,15 @@ export default function Timeline({
                   scaleBottom={scaleBottom}
                   transformToPixels={transformToPixels}
                 />
-                <g>
-                  {events
-                    .filter(({ y }) => scaleTop - 1 < y && y < scaleBottom)
-                    .map(({ moments, y }) => (
-                      <g key={y}>
-                        {moments
-                          .filter(
-                            ({ start, end }) =>
-                              start < timeRight && end > timeLeft
-                          )
-                          .map(({ start, end, label }) => (
-                            <TimeSpan
-                              key={start}
-                              label={label}
-                              y={y}
-                              transform={transformToPixels}
-                              start={start}
-                              end={end}
-                              onClick={() =>
-                                setTransformation(getTransform(start, end))
-                              }
-                            />
-                          ))}
-                      </g>
-                    ))}
-                </g>
+                <TimeSpanGroup
+                  events={events}
+                  timeLeft={timeLeft}
+                  timeRight={timeRight}
+                  scaleTop={scaleTop}
+                  scaleBottom={scaleBottom}
+                  transformToPixels={transformToPixels}
+                  setTransformation={setTransformation}
+                />
               </svg>
             );
           }}
