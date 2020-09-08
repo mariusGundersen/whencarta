@@ -10,7 +10,7 @@ import {
   TransformToPixels
 } from "../lib/panzoom";
 import PanZoom from "./PanZoom";
-import TimeMarkerGroup from "./TimeMarkerRow/TimeMarkerGroup";
+import TimeMarkerGroup from "./TimeMarkerGroup";
 import TimeSpan from "./TimeSpan";
 
 export interface Props {
