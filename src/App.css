@@ -21,6 +21,7 @@
 }
 
 .Timeline {
+  overflow: hidden;
   grid-area: timeline;
 }
 

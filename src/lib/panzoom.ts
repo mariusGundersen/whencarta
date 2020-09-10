@@ -1,4 +1,4 @@
-import { PointerEvent, WheelEvent } from "react";
+import { MouseEvent, PointerEvent, WheelEvent } from "react";
 import createMappers from "./createMappers";
 
 export interface Pos {
@@ -33,7 +33,7 @@ export function scaleToY(s: number) {
 const [yToPixelY, yToViewY] = createMappers([-0.5, 1.1], [0, 1]);
 const [xToPixelX, xToViewX] = createMappers([-1.2, 1.2], [0, 1]);
 
-export function getViewPos(event: PointerEvent | WheelEvent): Pos {
+export function getViewPos(event: PointerEvent | WheelEvent | MouseEvent): Pos {
   const rect = event.currentTarget.getBoundingClientRect();
 
   return {
@@ -42,7 +42,19 @@ export function getViewPos(event: PointerEvent | WheelEvent): Pos {
   };
 }
 
-export { xToViewX as pixelXToView };
+export { xToViewX as screenXToView };
+
+export function timeAndScaleToTransform(
+  time: number,
+  scale: number
+): Transform {
+  const sx = yToScale(-scale);
+  return {
+    sx,
+    tx: -time * sx,
+    ty: -scale,
+  };
+}
 
 export function timeToX(time: number, { sx, tx }: Transform): number {
   return sx * time + tx;
@@ -59,15 +71,22 @@ export function durationToPixelWidth(
   duration: number,
   transform: TransformToPixels
 ): number {
-  return (xToPixelX(timeToX(duration, transform)) - xToPixelX(timeToX(0, transform))) * transform.width;
+  return (
+    (xToPixelX(timeToX(duration, transform)) -
+      xToPixelX(timeToX(0, transform))) *
+    transform.width
+  );
 }
 
 export function modelToViewY(y: number, { ty }: Transform): number {
   return y + ty;
 }
 
-export function modelToPixelY(y: number, transform: TransformToPixels): number {
-  return yToPixelY(modelToViewY(y, transform)) * transform.height;
+export function scaleToPixelY(
+  scale: number,
+  transform: TransformToPixels
+): number {
+  return yToPixelY(modelToViewY(scale, transform)) * transform.height;
 }
 
 export function xToTime(x: number, transform: Transform): number {

@@ -1,36 +1,23 @@
 import React from "react";
-import {
-  durationToPixelWidth,
-  modelToPixelY,
-  timeToPixelX,
-  TransformToPixels,
-} from "../../lib/panzoom";
 
 export interface Props {
   label: string;
+  x: number;
   y: number;
-  transform: TransformToPixels;
-  start: number;
-  end: number;
+  width: number;
+  height: number;
   onClick?: () => void;
 }
 export default function TimeSpan({
   label,
-  start,
-  end,
-  transform,
+  x,
   y,
+  width,
+  height,
   onClick,
 }: Props): JSX.Element {
-  const x = timeToPixelX(start, transform);
-  const width = durationToPixelWidth(end - start, transform);
-  const height = (1 / 2) * transform.height;
-
   return (
-    <g
-      transform={`translate(0, ${modelToPixelY(y, transform)})`}
-      onClick={onClick}
-    >
+    <g transform={`translate(0, ${y})`} onClick={onClick}>
       <rect
         x={x}
         y={height / 4}

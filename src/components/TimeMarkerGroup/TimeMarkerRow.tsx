@@ -2,7 +2,7 @@ import React from "react";
 import normalize from "../../lib/normalize";
 import {
   durationToPixelWidth,
-  modelToPixelY,
+  scaleToPixelY,
   timeToPixelX,
   TransformToPixels,
 } from "../../lib/panzoom";
@@ -26,7 +26,7 @@ export default function TimeMarkerRow({
   transform,
 }: Props) {
   const height = transform.height;
-  const y = modelToPixelY(scale, transform);
+  const y = scaleToPixelY(scale, transform);
   const opacity = normalize(y / height, 1, 0.9);
 
   if (scale < 0) {

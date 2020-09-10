@@ -8,7 +8,7 @@ export interface Props {
   timeRight: number;
   scaleTop: number;
   scaleBottom: number;
-  transformToPixels: TransformToPixels;
+  transform: TransformToPixels;
 }
 
 export default function TimeMarkerGroup({
@@ -16,7 +16,7 @@ export default function TimeMarkerGroup({
   timeRight,
   scaleTop,
   scaleBottom,
-  transformToPixels,
+  transform,
 }: Props) {
   const scales = range(Math.floor(scaleTop), scaleBottom);
   return (
@@ -25,7 +25,7 @@ export default function TimeMarkerGroup({
         <TimeMarkerRow
           key={scale}
           scale={scale}
-          transform={transformToPixels}
+          transform={transform}
           timeFrom={timeLeft}
           timeTo={timeRight}
         />

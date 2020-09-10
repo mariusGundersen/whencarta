@@ -1,11 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
+import useResizeObserver from "use-resize-observer";
 import clamp from "../lib/clamp";
 import {
-  getTransform,
   pixelToModelY,
   pixelXToTime,
-  pixelXToView,
   scaleToY,
+  screenXToView,
   Transform,
   TransformToPixels,
 } from "../lib/panzoom";
@@ -14,7 +14,7 @@ import TimeMarkerGroup from "./TimeMarkerGroup";
 import TimeSpanGroup, { Moment } from "./TimeSpanGroup";
 
 export interface Props {
-  events: { y: number; moments: Moment[] }[];
+  getEvents(scale: number, fromTime: number, toTime: number): Moment[];
   minYear: number;
   maxYear: number;
   initialPos?: { x: number; s: number };
@@ -22,110 +22,87 @@ export interface Props {
 }
 
 export default function Timeline({
-  events,
+  getEvents,
   minYear,
   maxYear,
   initialPos,
   onChange,
 }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+  const { width = 1000, height = 300, ref } = useResizeObserver<
+    HTMLDivElement
+  >();
 
-  const [width, setWidth] = useState(1000);
-  const [height, setHeight] = useState(300);
+  const limit = useCallback(
+    ({ tx, ty, sx }: Transform) => {
+      const minZoom = -1 / minYear;
+      const maxZoom = width * 366;
 
-  const minZoom = -1 / minYear;
-  const maxZoom = width * 366;
-
-  function limit({ tx, ty, sx }: Transform) {
-    sx = clamp(minZoom, sx, maxZoom);
-    tx = clamp(
-      pixelXToView(1) - maxYear * sx,
-      tx,
-      pixelXToView(0) - minYear * sx
-    );
-    ty = clamp(scaleToY(maxZoom), ty, scaleToY(minZoom));
-    return {
-      tx,
-      ty,
-      sx,
-    };
-  }
-
-  const [transformation, setTransformation] = useState(() =>
-    initialPos
-      ? {
-          tx: initialPos.x,
-          ty: scaleToY(initialPos.s),
-          sx: initialPos.s,
-        }
-      : getTransform(minYear, maxYear)
+      sx = clamp(minZoom, sx, maxZoom);
+      tx = clamp(
+        screenXToView(1) - maxYear * sx,
+        tx,
+        screenXToView(0) - minYear * sx
+      );
+      ty = clamp(scaleToY(maxZoom), ty, scaleToY(minZoom));
+      return {
+        tx,
+        ty,
+        sx,
+      };
+    },
+    [maxYear, minYear, width]
   );
 
-  useEffect(() => {
-    if (!ref.current) return;
-    const size = ref.current.getBoundingClientRect();
-    setWidth(size.width);
-    setHeight(size.height);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener("resize", () => {
-      if (!ref.current) return;
-      const size = ref.current.getBoundingClientRect();
-      setWidth(window.innerWidth);
-      setHeight(size.height);
-    });
-  }, []);
+  const [transformation, setTransformation] = useState(() => ({
+    tx: initialPos?.x ?? 0,
+    ty: scaleToY(initialPos?.s ?? 1),
+    sx: initialPos?.s ?? 1,
+  }));
 
   return (
     <div className="Timeline" ref={ref}>
-      {ref.current && (
-        <PanZoom
-          transformation={transformation}
-          limit={limit}
-          onTransform={onChange}
-        >
-          {(transform) => {
-            const transformToPixels: TransformToPixels = {
-              ...transform,
-              width,
-              height,
-            };
-            const timeLeft = pixelXToTime(0, transformToPixels);
-            const timeRight = pixelXToTime(width, transformToPixels);
-            const scaleTop = pixelToModelY(0, transformToPixels);
-            const scaleBottom = pixelToModelY(height, transformToPixels);
+      <PanZoom
+        transformation={transformation}
+        limit={limit}
+        onTransform={onChange}
+      >
+        {(transform) => {
+          const transformToPixels: TransformToPixels = {
+            ...transform,
+            width,
+            height,
+          };
+          const timeLeft = pixelXToTime(0, transformToPixels);
+          const timeRight = pixelXToTime(width, transformToPixels);
+          const scaleTop = pixelToModelY(0, transformToPixels);
+          const scaleBottom = pixelToModelY(height, transformToPixels);
 
-            console.log(scaleTop, scaleBottom);
-
-            return (
-              <svg
-                viewBox={`0 0 ${width} ${height}`}
-                width={width}
-                height={height}
-              >
-                <TimeMarkerGroup
-                  timeLeft={timeLeft}
-                  timeRight={timeRight}
-                  scaleTop={scaleTop}
-                  scaleBottom={scaleBottom}
-                  transformToPixels={transformToPixels}
-                />
-                <TimeSpanGroup
-                  events={events}
-                  timeLeft={timeLeft}
-                  timeRight={timeRight}
-                  scaleTop={scaleTop}
-                  scaleBottom={scaleBottom}
-                  transformToPixels={transformToPixels}
-                  setTransformation={setTransformation}
-                />
-              </svg>
-            );
-          }}
-        </PanZoom>
-      )}
+          return (
+            <svg
+              viewBox={`0 0 ${width} ${height}`}
+              width={width}
+              height={height}
+            >
+              <TimeMarkerGroup
+                timeLeft={timeLeft}
+                timeRight={timeRight}
+                scaleTop={scaleTop}
+                scaleBottom={scaleBottom}
+                transform={transformToPixels}
+              />
+              <TimeSpanGroup
+                getEvents={getEvents}
+                timeLeft={timeLeft}
+                timeRight={timeRight}
+                scaleTop={scaleTop}
+                scaleBottom={scaleBottom}
+                transform={transformToPixels}
+                setTransformation={setTransformation}
+              />
+            </svg>
+          );
+        }}
+      </PanZoom>
     </div>
   );
 }
