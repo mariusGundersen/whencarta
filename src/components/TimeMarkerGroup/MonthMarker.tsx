@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { timeToPixelX, TransformToPixels } from "../../lib/panzoom";
 import TimeMarker from "./TimeMarker";
-import { formatMonth } from "./TimeMarkerRow";
 
 export interface Props {
   time: number;
   transform: TransformToPixels;
   dx: number;
   y: number;
+  showYear: boolean;
   month: number;
   year: number;
 }
@@ -17,10 +17,15 @@ export default function MonthMarker({
   transform,
   dx,
   y,
+  showYear,
   month,
   year,
 }: Props): JSX.Element {
-  const label = useMemo(() => formatMonth(month, year), [month, year]);
+  const label = useMemo(() => format(month, year, showYear), [
+    month,
+    year,
+    showYear,
+  ]);
   return (
     <TimeMarker
       x={timeToPixelX(time, transform)}
@@ -30,4 +35,16 @@ export default function MonthMarker({
       height={transform.height}
     />
   );
+}
+
+const monthName = Intl.DateTimeFormat("en-US", { month: "long" });
+const monthYearName = Intl.DateTimeFormat("en-US", {
+  month: "long",
+  year: "numeric",
+});
+
+export function format(month: number, year: number, showYear: boolean) {
+  return showYear
+    ? monthYearName.format(new Date(year, month))
+    : monthName.format(new Date(year, month));
 }

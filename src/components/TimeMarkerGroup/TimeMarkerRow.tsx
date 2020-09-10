@@ -27,7 +27,8 @@ export default function TimeMarkerRow({
 }: Props) {
   const height = transform.height;
   const y = scaleToPixelY(scale, transform);
-  const opacity = normalize(y / height, 1, 0.9);
+  const screenFraction = y / height;
+  const opacity = normalize(screenFraction, 1, 0.9);
 
   if (scale < 0) {
     const delta = 10 ** -scale;
@@ -72,6 +73,7 @@ export default function TimeMarkerRow({
               transform={transform}
               dx={dx}
               y={y}
+              showYear={screenFraction < 0.6}
               month={month + index}
               year={year}
             />
@@ -91,6 +93,7 @@ export default function TimeMarkerRow({
               y={y}
               timeFrom={timeFrom}
               timeTo={timeTo}
+              showYear={screenFraction < 0.6}
             />
           ))}
         </g>
@@ -99,12 +102,6 @@ export default function TimeMarkerRow({
       return <g></g>;
     }
   }
-}
-
-const monthName = Intl.DateTimeFormat("en-US", { month: "long" });
-
-export function formatMonth(month: number, year: number) {
-  return monthName.format(new Date(year, month));
 }
 
 export function format(n: number) {

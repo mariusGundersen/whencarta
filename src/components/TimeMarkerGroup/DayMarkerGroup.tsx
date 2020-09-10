@@ -5,7 +5,7 @@ import {
   TransformToPixels,
 } from "../../lib/panzoom";
 import range from "../../lib/range";
-import TimeMarker from "./TimeMarker";
+import DayMarker from "./DayMarker";
 
 export interface Props {
   year: number;
@@ -15,6 +15,7 @@ export interface Props {
   y: number;
   timeFrom: number;
   timeTo: number;
+  showYear: boolean;
 }
 
 export default function DayMarkerGroup({
@@ -25,6 +26,7 @@ export default function DayMarkerGroup({
   y,
   timeFrom,
   timeTo,
+  showYear,
 }: Props) {
   const daysInMonth = useMemo(() => getDaysInMonth(year, month), [year, month]);
   const yearFraction = 1 / 12 / daysInMonth;
@@ -36,13 +38,15 @@ export default function DayMarkerGroup({
         if (time < timeFrom - yearFraction || time > timeTo) return null;
         const x = timeToPixelX(time, transform);
         return (
-          <TimeMarker
-            key={day}
+          <DayMarker
+            day={day}
+            month={month}
+            year={year}
             x={x}
-            dx={dx}
             y={y}
-            label={day + 1}
+            dx={dx}
             height={transform.height}
+            showYear={showYear}
           />
         );
       })}
