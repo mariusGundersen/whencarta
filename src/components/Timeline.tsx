@@ -14,7 +14,7 @@ import TimeMarkerGroup from "./TimeMarkerGroup";
 import TimeSpanGroup, { Moment } from "./TimeSpanGroup";
 
 export interface Props {
-  getEvents(scale: number, fromTime: number, toTime: number): Moment[];
+  getMoments(scale: number, fromTime: number, toTime: number): Moment[];
   minYear: number;
   maxYear: number;
   initialPos?: { x: number; s: number };
@@ -22,7 +22,7 @@ export interface Props {
 }
 
 export default function Timeline({
-  getEvents,
+  getMoments,
   minYear,
   maxYear,
   initialPos,
@@ -91,7 +91,7 @@ export default function Timeline({
                 transform={transformToPixels}
               />
               <TimeSpanGroup
-                getEvents={getEvents}
+                getMoments={getMoments}
                 timeLeft={timeLeft}
                 timeRight={timeRight}
                 scaleTop={scaleTop}

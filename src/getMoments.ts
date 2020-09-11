@@ -1,4 +1,5 @@
 import { Moment } from "./components/TimeSpanGroup";
+import { parseDate, yearMonthDayToTime } from "./lib/time";
 
 interface MomentWithWidth {
   start: number;
@@ -183,12 +184,29 @@ const root: MomentNode = {
   ],
 };
 
+interface Momentish {
+  start: string,
+  end: string,
+  label: string
+}
+
+const momentishes: Momentish[] = [
+  { start: "1867-11-07", end:"1934-07-04", label: "Marie Curie"},
+  { start: "1642-12-25", end:"1727-03-31", label: "Isaac Newton"},
+  { start: "1707-04-15", end:"1783-09-18", label: "Leonhard Euler"},
+  { start: '1607-11', end: '1665-01-12', label: 'Pierre de Fermat'},
+  { start: '1736-01-25', end: '1813-04-10', label: 'Joseph Louis Lagrange'},
+  { start: '1646-07-01', end: '1716-11-14', label: 'Gottfried Leibniz'},
+  { start: '1623-06-19', end: '1662-08-19', label: 'Blaise Pascal'},
+]
+
 const events: MomentWithY[] = [
   ...flattenChildren(root, -10),
   { y: 0, start: 1987, end: 1988, label: "Marius is born" },
   { y: -2, start: 1961, end: 1989, label: "Berlin wall" },
   { y: -1, start: 1939 + 8 / 12, end: 1945 + 8 / 12, label: "World War 2" },
   { y: -1, start: 1914 + 7 / 12, end: 1918 + 10 / 12, label: "World War 1" },
+  ...momentishes.map(toMoment)
 ];
 const moments = groupY(events);
 
@@ -196,7 +214,7 @@ export default function getMoments(
   scale: number,
   timeLeft: number,
   timeRight: number
-) {
+): Moment[] {
   return (
     moments[scale]?.filter(
       ({ start, end }) => start < timeRight && end > timeLeft
@@ -229,9 +247,24 @@ function groupY(list: MomentWithY[]) {
     const found = result[y];
     if (found) {
       found.push(entry);
+      found.sort((a, b) => a.start - b.start);
     } else {
       result[y] = [entry];
     }
   }
   return result;
+}
+
+function toMoment(momentish: Momentish): MomentWithY {
+
+  const start = yearMonthDayToTime(...parseDate(momentish.start));
+  const end = yearMonthDayToTime(...parseDate(momentish.end));
+  const y = Math.floor(-Math.log10(end-start));
+
+  return {
+    label: momentish.label,
+    start,
+    end,
+    y
+  };
 }

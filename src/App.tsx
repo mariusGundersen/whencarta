@@ -19,7 +19,7 @@ export default function App() {
       <div className="map"></div>
       <div className="info">info</div>
       <Timeline
-        getEvents={getMoments}
+        getMoments={getMoments}
         minYear={minYear}
         maxYear={maxYear}
         initialPos={initialPos}

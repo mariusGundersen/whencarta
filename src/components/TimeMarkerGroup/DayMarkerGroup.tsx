@@ -39,6 +39,7 @@ export default function DayMarkerGroup({
         const x = timeToPixelX(time, transform);
         return (
           <DayMarker
+            key={day}
             day={day}
             month={month}
             year={year}

@@ -28,9 +28,7 @@ export default function DayMarker({
     year,
     showYear,
   ]);
-  return (
-    <TimeMarker key={day} x={x} dx={dx} y={y} label={label} height={height} />
-  );
+  return <TimeMarker x={x} dx={dx} y={y} label={label} height={height} />;
 }
 
 const monthYearName = Intl.DateTimeFormat("en-US", {

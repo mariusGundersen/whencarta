@@ -17,7 +17,7 @@ export interface Moment {
 }
 
 export interface Props {
-  getEvents(scale: number, fromTime: number, toTime: number): Moment[];
+  getMoments(scale: number, fromTime: number, toTime: number): Moment[];
   readonly timeLeft: number;
   readonly timeRight: number;
   readonly scaleTop: number;
@@ -27,7 +27,7 @@ export interface Props {
 }
 
 export default function TimeSpanGroup({
-  getEvents,
+  getMoments,
   timeLeft,
   timeRight,
   scaleTop,
@@ -35,7 +35,7 @@ export default function TimeSpanGroup({
   transform,
   setTransformation,
 }: Props) {
-  const height = (1 / 2) * transform.height;
+  const height = 25;
   const scales = range(Math.floor(scaleTop), scaleBottom);
   return (
     <g>
@@ -43,8 +43,8 @@ export default function TimeSpanGroup({
         const y = scaleToPixelY(scale, transform);
         return (
           <g key={scale}>
-            {getEvents(scale, timeLeft, timeRight).map(
-              ({ start, end, label }) => {
+            {toLanes(getMoments(scale, timeLeft, timeRight)).map(
+              ({ start, end, label, yIndex }) => {
                 const x = timeToPixelX(start, transform);
                 const width = durationToPixelWidth(end - start, transform);
                 return (
@@ -52,7 +52,8 @@ export default function TimeSpanGroup({
                     key={start}
                     label={label}
                     x={x}
-                    y={y}
+                    y={y + height}
+                    dy={height * yIndex}
                     width={width}
                     height={height}
                     onClick={() =>
@@ -69,4 +70,21 @@ export default function TimeSpanGroup({
       })}
     </g>
   );
+}
+
+// todo: make this remember the result from last time
+function toLanes(data: Moment[]) {
+  const lanesData: (Moment & { yIndex: number })[] = [];
+  let stack: Moment[] = [];
+  for (const e of data) {
+    const lane = stack.findIndex((s) => s.end <= e.start);
+    const yIndex = lane === -1 ? stack.length : lane;
+    if (yIndex > 3) continue;
+    lanesData.push({
+      ...e,
+      yIndex,
+    });
+    stack[yIndex] = e;
+  }
+  return lanesData;
 }
