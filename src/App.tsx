@@ -1,29 +1,31 @@
 import React, { useEffect } from "react";
 import "./App.css";
+import { Map } from "./components/Map";
 import Timeline from "./components/Timeline";
 import getMoments, { maxYear, minYear } from "./getMoments";
 import useDebounce from "./lib/useDebounce";
 
 export default function App() {
-  const [pos, setPos] = useDebounce({ x: 0, s: 1 }, 100);
+  const [pos, setPos] = useDebounce({ lat: 0, lng: 0, zoom: 2 }, 100);
+  const [time, setTime] = useDebounce({ x: 0, s: 1 }, 100);
 
   useEffect(() => {
-    window.history.replaceState(null, "", `#${pos.x}|${pos.s}`);
-  }, [pos]);
+    window.history.replaceState(null, "", `#${time.x}|${time.s}`);
+  }, [time]);
 
   const initialPos = getInitialPos();
 
   return (
     <div className="app">
       <input type="search" className="search" />
-      <div className="map"></div>
+      <Map pos={pos} onChange={setPos} />
       <div className="info">info</div>
       <Timeline
         getMoments={getMoments}
         minYear={minYear}
         maxYear={maxYear}
         initialPos={initialPos}
-        onChange={setPos}
+        onChange={setTime}
       />
     </div>
   );

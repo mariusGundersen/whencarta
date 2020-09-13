@@ -60,49 +60,45 @@ export default function Timeline({
   }));
 
   return (
-    <div className="Timeline" ref={ref}>
-      <PanZoom
-        transformation={transformation}
-        limit={limit}
-        onTransform={onChange}
-      >
-        {(transform) => {
-          const transformToPixels: TransformToPixels = {
-            ...transform,
-            width,
-            height,
-          };
-          const timeLeft = pixelXToTime(0, transformToPixels);
-          const timeRight = pixelXToTime(width, transformToPixels);
-          const scaleTop = pixelToModelY(0, transformToPixels);
-          const scaleBottom = pixelToModelY(height, transformToPixels);
+    <PanZoom
+      className="Timeline"
+      ref={ref}
+      transformation={transformation}
+      limit={limit}
+      onTransform={onChange}
+    >
+      {(transform) => {
+        const transformToPixels: TransformToPixels = {
+          ...transform,
+          width,
+          height,
+        };
+        const timeLeft = pixelXToTime(0, transformToPixels);
+        const timeRight = pixelXToTime(width, transformToPixels);
+        const scaleTop = pixelToModelY(0, transformToPixels);
+        const scaleBottom = pixelToModelY(height, transformToPixels);
 
-          return (
-            <svg
-              viewBox={`0 0 ${width} ${height}`}
-              width={width}
-              height={height}
-            >
-              <TimeMarkerGroup
-                timeLeft={timeLeft}
-                timeRight={timeRight}
-                scaleTop={scaleTop}
-                scaleBottom={scaleBottom}
-                transform={transformToPixels}
-              />
-              <TimeSpanGroup
-                getMoments={getMoments}
-                timeLeft={timeLeft}
-                timeRight={timeRight}
-                scaleTop={scaleTop}
-                scaleBottom={scaleBottom}
-                transform={transformToPixels}
-                setTransformation={setTransformation}
-              />
-            </svg>
-          );
-        }}
-      </PanZoom>
-    </div>
+        return (
+          <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height}>
+            <TimeMarkerGroup
+              timeLeft={timeLeft}
+              timeRight={timeRight}
+              scaleTop={scaleTop}
+              scaleBottom={scaleBottom}
+              transform={transformToPixels}
+            />
+            <TimeSpanGroup
+              getMoments={getMoments}
+              timeLeft={timeLeft}
+              timeRight={timeRight}
+              scaleTop={scaleTop}
+              scaleBottom={scaleBottom}
+              transform={transformToPixels}
+              setTransformation={setTransformation}
+            />
+          </svg>
+        );
+      }}
+    </PanZoom>
   );
 }

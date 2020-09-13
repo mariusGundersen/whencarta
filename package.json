@@ -10,9 +10,11 @@
     "@types/node": "^12.12.54",
     "@types/react": "^16.9.47",
     "@types/react-dom": "^16.9.8",
+    "leaflet": "^1.7.1",
     "proposal-temporal": "^0.3.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
+    "react-leaflet": "^2.7.0",
     "react-scripts": "3.4.3",
     "typescript": "^3.9.7",
     "use-resize-observer": "^6.1.0"
@@ -37,5 +39,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react-leaflet": "^2.5.2"
   }
 }

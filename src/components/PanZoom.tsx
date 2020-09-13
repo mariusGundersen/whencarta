@@ -1,4 +1,5 @@
 import React, {
+  forwardRef,
   HTMLAttributes,
   MouseEvent,
   PointerEvent,
@@ -31,14 +32,17 @@ export interface Props extends HTMLAttributes<HTMLDivElement> {
 
 const defaultTransform = { tx: 0, ty: 0, sx: 1, sy: 1 };
 
-export default function PanZoom({
-  children,
-  style,
-  limit,
-  transformation = defaultTransform,
-  onTransform,
-  ...props
-}: Props) {
+export default forwardRef<HTMLDivElement, Props>(function PanZoom(
+  {
+    children,
+    style,
+    limit,
+    transformation = defaultTransform,
+    onTransform,
+    ...props
+  },
+  ref
+) {
   const pointers = useRef(new Map<number, PosPos>());
   const [transform, setTransform] = useState(transformation);
   const [easing, setEasing] = useState(() => ease(transform, transform, 0));
@@ -159,6 +163,7 @@ export default function PanZoom({
   return (
     <div
       {...props}
+      ref={ref}
       style={{ ...style, touchAction: "none" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -170,7 +175,8 @@ export default function PanZoom({
       {children(transform)}
     </div>
   );
-}
+});
+
 export function useSingleAnimationFrame() {
   return useRef(debouncedAnimationFrame());
 }
