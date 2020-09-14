@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Map } from "./components/Map";
 import Timeline from "./components/Timeline";
-import { MomentScale } from "./components/TimeSpanGroup";
+import { TimelineScaleMoments } from "./components/TimeSpanGroup";
 import getMoments, { maxYear, minYear } from "./getMoments";
 import range from "./lib/range";
 import useDebounce from "./lib/useDebounce";
@@ -17,7 +17,7 @@ export default function App() {
 
   const initialPos = getInitialPos();
 
-  const [moments, setMoments] = useState<MomentScale[]>([]);
+  const [moments, setMoments] = useState<TimelineScaleMoments[]>([]);
   const [timelineBounds, setTimelineBounds] = useState({
     minScale: 0,
     maxScale: 0,

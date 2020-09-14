@@ -9,19 +9,19 @@ import {
 } from "../../lib/panzoom";
 import TimeSpan from "./TimeSpan";
 
-export interface Moment {
+export interface TimelineMoment {
   readonly start: number;
   readonly end: number;
   readonly label: string;
 }
 
-export interface MomentScale {
+export interface TimelineScaleMoments {
   readonly scale: number;
-  readonly moments: Moment[];
+  readonly moments: TimelineMoment[];
 }
 
 export interface Props {
-  moments: MomentScale[];
+  moments: TimelineScaleMoments[];
   readonly transform: TransformToPixels;
   setTransformation(transform: Transform): void;
 }
@@ -66,9 +66,9 @@ export default function TimeSpanGroup({
 }
 
 // todo: make this remember the result from last time
-function toLanes(data: Moment[]) {
-  const lanesData: (Moment & { yIndex: number })[] = [];
-  let stack: Moment[] = [];
+function toLanes(data: TimelineMoment[]) {
+  const lanesData: (TimelineMoment & { yIndex: number })[] = [];
+  let stack: TimelineMoment[] = [];
   for (const e of data) {
     const lane = stack.findIndex((s) => s.end <= e.start);
     const yIndex = lane === -1 ? stack.length : lane;

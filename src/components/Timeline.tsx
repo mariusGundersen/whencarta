@@ -11,10 +11,10 @@ import {
 } from "../lib/panzoom";
 import PanZoom from "./PanZoom";
 import TimeMarkerGroup from "./TimeMarkerGroup";
-import TimeSpanGroup, { MomentScale } from "./TimeSpanGroup";
+import TimeSpanGroup, { TimelineScaleMoments } from "./TimeSpanGroup";
 
 export interface Props {
-  moments: MomentScale[];
+  moments: TimelineScaleMoments[];
   minYear: number;
   maxYear: number;
   initialPos?: { x: number; s: number };
