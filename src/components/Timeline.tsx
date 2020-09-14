@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import useResizeObserver from "use-resize-observer";
 import clamp from "../lib/clamp";
 import {
@@ -11,22 +11,27 @@ import {
 } from "../lib/panzoom";
 import PanZoom from "./PanZoom";
 import TimeMarkerGroup from "./TimeMarkerGroup";
-import TimeSpanGroup, { Moment } from "./TimeSpanGroup";
+import TimeSpanGroup, { MomentScale } from "./TimeSpanGroup";
 
 export interface Props {
-  getMoments(scale: number, fromTime: number, toTime: number): Moment[];
+  moments: MomentScale[];
   minYear: number;
   maxYear: number;
   initialPos?: { x: number; s: number };
-  onChange?: (pos: { x: number; s: number }) => void;
+  onBoundsChange?: (bounds: {
+    fromTime: number;
+    toTime: number;
+    minScale: number;
+    maxScale: number;
+  }) => void;
 }
 
 export default function Timeline({
-  getMoments,
+  moments,
   minYear,
   maxYear,
   initialPos,
-  onChange,
+  onBoundsChange,
 }: Props) {
   const { width = 1000, height = 300, ref } = useResizeObserver<
     HTMLDivElement
@@ -59,46 +64,48 @@ export default function Timeline({
     sx: initialPos?.s ?? 1,
   }));
 
+  const [transform, setTransform] = useState(() => ({
+    tx: initialPos?.x ?? 0,
+    ty: scaleToY(initialPos?.s ?? 1),
+    sx: initialPos?.s ?? 1,
+  }));
+
+  const transformToPixels: TransformToPixels = {
+    ...transform,
+    width,
+    height,
+  };
+  const fromTime = pixelXToTime(0, transformToPixels);
+  const toTime = pixelXToTime(width, transformToPixels);
+  const minScale = pixelToModelY(0, transformToPixels);
+  const maxScale = pixelToModelY(height, transformToPixels);
+
+  useEffect(() => {
+    onBoundsChange?.({ fromTime, toTime, minScale, maxScale });
+  }, [onBoundsChange, fromTime, toTime, minScale, maxScale]);
+
   return (
     <PanZoom
       className="Timeline"
       ref={ref}
       transformation={transformation}
       limit={limit}
-      onTransform={onChange}
+      onTransform={setTransform}
     >
-      {(transform) => {
-        const transformToPixels: TransformToPixels = {
-          ...transform,
-          width,
-          height,
-        };
-        const timeLeft = pixelXToTime(0, transformToPixels);
-        const timeRight = pixelXToTime(width, transformToPixels);
-        const scaleTop = pixelToModelY(0, transformToPixels);
-        const scaleBottom = pixelToModelY(height, transformToPixels);
-
-        return (
-          <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height}>
-            <TimeMarkerGroup
-              timeLeft={timeLeft}
-              timeRight={timeRight}
-              scaleTop={scaleTop}
-              scaleBottom={scaleBottom}
-              transform={transformToPixels}
-            />
-            <TimeSpanGroup
-              getMoments={getMoments}
-              timeLeft={timeLeft}
-              timeRight={timeRight}
-              scaleTop={scaleTop}
-              scaleBottom={scaleBottom}
-              transform={transformToPixels}
-              setTransformation={setTransformation}
-            />
-          </svg>
-        );
-      }}
+      <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height}>
+        <TimeMarkerGroup
+          timeLeft={fromTime}
+          timeRight={toTime}
+          scaleTop={minScale}
+          scaleBottom={maxScale}
+          transform={transformToPixels}
+        />
+        <TimeSpanGroup
+          moments={moments}
+          transform={transformToPixels}
+          setTransformation={setTransformation}
+        />
+      </svg>
     </PanZoom>
   );
 }

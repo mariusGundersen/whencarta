@@ -1,8 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Map } from "./components/Map";
 import Timeline from "./components/Timeline";
+import { MomentScale } from "./components/TimeSpanGroup";
 import getMoments, { maxYear, minYear } from "./getMoments";
+import range from "./lib/range";
 import useDebounce from "./lib/useDebounce";
 
 export default function App() {
@@ -15,17 +17,41 @@ export default function App() {
 
   const initialPos = getInitialPos();
 
+  const [moments, setMoments] = useState<MomentScale[]>([]);
+  const [timelineBounds, setTimelineBounds] = useState({
+    minScale: 0,
+    maxScale: 0,
+    fromTime: 0,
+    toTime: 0,
+  });
+  const [mapBounds, setMapBounds] = useState({
+    north: 0,
+    east: 0,
+    south: 0,
+    west: 0,
+  });
+
+  useEffect(() => {
+    const { minScale, maxScale, fromTime, toTime } = timelineBounds;
+    const scales = range(Math.floor(minScale), maxScale);
+    const moments = scales.map((scale) => ({
+      scale,
+      moments: getMoments(scale, fromTime, toTime),
+    }));
+    setMoments(moments);
+  }, [timelineBounds]);
+
   return (
     <div className="app">
       <input type="search" className="search" />
-      <Map pos={pos} onChange={setPos} />
+      <Map pos={pos} onChange={setPos} onBoundsChange={setMapBounds} />
       <div className="info">info</div>
       <Timeline
-        getMoments={getMoments}
+        moments={moments}
         minYear={minYear}
         maxYear={maxYear}
         initialPos={initialPos}
-        onChange={setTime}
+        onBoundsChange={setTimelineBounds}
       />
     </div>
   );

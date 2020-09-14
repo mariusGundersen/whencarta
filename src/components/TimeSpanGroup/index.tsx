@@ -7,64 +7,57 @@ import {
   Transform,
   TransformToPixels,
 } from "../../lib/panzoom";
-import range from "../../lib/range";
 import TimeSpan from "./TimeSpan";
 
 export interface Moment {
-  start: number;
-  end: number;
-  label: string;
+  readonly start: number;
+  readonly end: number;
+  readonly label: string;
+}
+
+export interface MomentScale {
+  readonly scale: number;
+  readonly moments: Moment[];
 }
 
 export interface Props {
-  getMoments(scale: number, fromTime: number, toTime: number): Moment[];
-  readonly timeLeft: number;
-  readonly timeRight: number;
-  readonly scaleTop: number;
-  readonly scaleBottom: number;
+  moments: MomentScale[];
   readonly transform: TransformToPixels;
   setTransformation(transform: Transform): void;
 }
 
 export default function TimeSpanGroup({
-  getMoments,
-  timeLeft,
-  timeRight,
-  scaleTop,
-  scaleBottom,
+  moments,
   transform,
   setTransformation,
 }: Props) {
   const height = 25;
-  const scales = range(Math.floor(scaleTop), scaleBottom);
   return (
     <g>
-      {scales.map((scale) => {
+      {moments.map(({ scale, moments }) => {
         const y = scaleToPixelY(scale, transform);
         return (
           <g key={scale}>
-            {toLanes(getMoments(scale, timeLeft, timeRight)).map(
-              ({ start, end, label, yIndex }) => {
-                const x = timeToPixelX(start, transform);
-                const width = durationToPixelWidth(end - start, transform);
-                return (
-                  <TimeSpan
-                    key={start}
-                    label={label}
-                    x={x}
-                    y={y + height}
-                    dy={height * yIndex}
-                    width={width}
-                    height={height}
-                    onClick={() =>
-                      setTransformation(
-                        timeAndScaleToTransform((start + end) / 2, scale)
-                      )
-                    }
-                  />
-                );
-              }
-            )}
+            {toLanes(moments).map(({ start, end, label, yIndex }) => {
+              const x = timeToPixelX(start, transform);
+              const width = durationToPixelWidth(end - start, transform);
+              return (
+                <TimeSpan
+                  key={start}
+                  label={label}
+                  x={x}
+                  y={y + height}
+                  dy={height * yIndex}
+                  width={width}
+                  height={height}
+                  onClick={() =>
+                    setTransformation(
+                      timeAndScaleToTransform((start + end) / 2, scale)
+                    )
+                  }
+                />
+              );
+            })}
           </g>
         );
       })}

@@ -1,6 +1,6 @@
 import "leaflet/dist/leaflet.css";
-import React, { useCallback } from "react";
-import { Map as LeafletMap, TileLayer, Viewport } from "react-leaflet";
+import React, { useCallback, useRef } from "react";
+import { Map as LeafletMap, TileLayer } from "react-leaflet";
 
 export interface Pos {
   readonly lat: number;
@@ -11,19 +11,30 @@ export interface Pos {
 export interface Props {
   readonly pos: Pos;
   onChange(p: Pos): void;
+  onBoundsChange?: (bounds: {
+    north: number;
+    east: number;
+    south: number;
+    west: number;
+  }) => void;
 }
 
-export function Map({ pos, onChange }: Props) {
-  const onViewportChanged = useCallback(
-    (v: Viewport) => {
-      if (v.zoom != undefined && v.center != undefined) {
-        onChange({ lat: v.center[0], lng: v.center[1], zoom: v.zoom });
-      }
-    },
-    [onChange]
-  );
+export function Map({ pos, onBoundsChange }: Props) {
+  const ref = useRef<LeafletMap>(null);
+  const onViewportChanged = useCallback(() => {
+    const bounds = ref.current?.leafletElement.getBounds();
+    if (bounds) {
+      onBoundsChange?.({
+        north: bounds.getNorth(),
+        east: bounds.getEast(),
+        south: bounds.getSouth(),
+        west: bounds.getWest(),
+      });
+    }
+  }, [onBoundsChange]);
   return (
     <LeafletMap
+      ref={ref}
       className="map"
       zoom={pos.zoom}
       center={pos}

@@ -3,7 +3,6 @@ import React, {
   HTMLAttributes,
   MouseEvent,
   PointerEvent,
-  ReactElement,
   useCallback,
   useEffect,
   useRef,
@@ -24,10 +23,9 @@ import {
 } from "../lib/panzoom";
 
 export interface Props extends HTMLAttributes<HTMLDivElement> {
-  children(transform: Transform): ReactElement;
   transformation?: Transform;
   limit(t: Transform): Transform;
-  onTransform?: (pos: { x: number; s: number }) => void;
+  onTransform?: (transform: Transform) => void;
 }
 
 const defaultTransform = { tx: 0, ty: 0, sx: 1, sy: 1 };
@@ -156,9 +154,9 @@ export default forwardRef<HTMLDivElement, Props>(function PanZoom(
   );
 
   useEffect(() => {
-    onTransform?.({ x: transform.tx, s: transform.sx });
+    onTransform?.(transform);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transform.tx, transform.sx]);
+  }, [transform]);
 
   return (
     <div
@@ -172,7 +170,7 @@ export default forwardRef<HTMLDivElement, Props>(function PanZoom(
       onDoubleClick={onDoubleClick}
       onWheel={onWheel}
     >
-      {children(transform)}
+      {children}
     </div>
   );
 });
