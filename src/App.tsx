@@ -9,11 +9,11 @@ import useDebounce from "./lib/useDebounce";
 
 export default function App() {
   const [pos, setPos] = useDebounce({ lat: 0, lng: 0, zoom: 2 }, 100);
-  const [time, setTime] = useDebounce({ x: 0, s: 1 }, 100);
+  //const [time, setTime] = useDebounce({ x: 0, s: 1 }, 100);
 
-  useEffect(() => {
+  /*useEffect(() => {
     window.history.replaceState(null, "", `#${time.x}|${time.s}`);
-  }, [time]);
+  }, [time]);*/
 
   const initialPos = getInitialPos();
 
@@ -24,7 +24,7 @@ export default function App() {
     fromTime: 0,
     toTime: 0,
   });
-  const [mapBounds, setMapBounds] = useState({
+  const [, /*mapBounds*/ setMapBounds] = useState({
     north: 0,
     east: 0,
     south: 0,
