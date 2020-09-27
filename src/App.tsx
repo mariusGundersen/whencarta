@@ -9,7 +9,6 @@ import range from "./lib/range";
 import useDebounce from "./lib/useDebounce";
 
 export default function App() {
-  const pos = { lat: 0, lng: 0, zoom: 2 };
   const [time, setTime] = useState({ x: 0, s: 1 });
 
   const initialPos = getInitialPos();
@@ -27,6 +26,7 @@ export default function App() {
     east: 0,
     south: 0,
     west: 0,
+    zoom: 0,
   });
 
   useEffect(() => {
@@ -41,15 +41,27 @@ export default function App() {
   }, [mapBounds, timelineBounds]);
 
   const delayedTime = useDebounce(time, 500);
+  const dealyedBounds = useDebounce(mapBounds, 500);
 
   useEffect(() => {
-    setInitialPos(delayedTime.x, delayedTime.s);
-  }, [delayedTime.s, delayedTime.x]);
+    const { north, south, east, west, zoom } = dealyedBounds;
+    setInitialPos(
+      delayedTime.x,
+      delayedTime.s,
+      (north + south) / 2,
+      (east + west) / 2,
+      zoom
+    );
+  }, [dealyedBounds, delayedTime.s, delayedTime.x]);
 
   return (
     <div className="app">
       <input type="search" className="search" />
-      <Map pos={pos} onBoundsChange={setMapBounds} features={geoFeatures} />
+      <Map
+        initialPos={initialPos}
+        onBoundsChange={setMapBounds}
+        features={geoFeatures}
+      />
       <div className="info">info</div>
       <Timeline
         moments={moments}
@@ -63,15 +75,27 @@ export default function App() {
   );
 }
 
-function getInitialPos(): { x: number; s: number } | undefined {
-  const result = /^#(.*)\|(.*)$/.exec(document.location.hash);
-  if (result) {
-    const x = parseFloat(result[1]);
-    const s = parseFloat(result[2]);
-    return { x: x || 0, s: s || 1 };
-  }
+function getInitialPos(): {
+  x: number;
+  s: number;
+  lat: number;
+  lng: number;
+  zoom: number;
+} {
+  const [x = 0, s = 1, lat = 0, lng = 0, zoom = 3] = document.location.hash
+    .substr(1)
+    .split("|")
+    .map((x) => parseFloat(x));
+
+  return { x, s, lat, lng, zoom };
 }
 
-function setInitialPos(x: number, s: number) {
-  window.history.replaceState(null, "", `#${x}|${s}`);
+function setInitialPos(
+  x: number,
+  s: number,
+  lat: number,
+  lng: number,
+  zoom: number
+) {
+  window.history.replaceState(null, "", `#${x}|${s}|${lat}|${lng}|${zoom}`);
 }

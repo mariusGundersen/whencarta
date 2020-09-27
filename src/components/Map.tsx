@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { GeoJSON, Map as LeafletMap, TileLayer } from "react-leaflet";
 
 export interface Feature {
@@ -15,41 +15,38 @@ export interface Pos {
 }
 
 export interface Props {
-  readonly pos: Pos;
+  readonly initialPos: Pos;
   readonly features: Feature[];
   onBoundsChange?: (bounds: {
     north: number;
     east: number;
     south: number;
     west: number;
+    zoom: number;
   }) => void;
 }
 
-export function Map({ pos, features, onBoundsChange }: Props) {
+export function Map({ initialPos, features, onBoundsChange }: Props) {
   const ref = useRef<LeafletMap>(null);
+  const [pos] = useState(initialPos);
+
   const onViewportChanged = useCallback(() => {
     const bounds = ref.current?.leafletElement.getBounds();
     if (bounds) {
+      const zoom = ref.current?.leafletElement.getZoom() ?? 0;
       onBoundsChange?.({
         north: bounds.getNorth(),
         east: bounds.getEast(),
         south: bounds.getSouth(),
         west: bounds.getWest(),
+        zoom,
       });
     }
   }, [onBoundsChange]);
 
   useEffect(() => {
-    const bounds = ref.current?.leafletElement.getBounds();
-    if (bounds) {
-      onBoundsChange?.({
-        north: bounds.getNorth(),
-        east: bounds.getEast(),
-        south: bounds.getSouth(),
-        west: bounds.getWest(),
-      });
-    }
-  }, [onBoundsChange]);
+    onViewportChanged();
+  }, [onViewportChanged]);
 
   return (
     <LeafletMap
@@ -58,6 +55,7 @@ export function Map({ pos, features, onBoundsChange }: Props) {
       zoom={pos.zoom}
       center={pos}
       zoomControl={false}
+      zoomSnap={0}
       onViewportChanged={onViewportChanged}
     >
       <TileLayer
