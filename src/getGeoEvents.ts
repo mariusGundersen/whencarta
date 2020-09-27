@@ -1,3 +1,4 @@
+import extent from "geojson-extent";
 import { parseDate, yearMonthDayToTime } from "./lib/time";
 
 export interface GeoEventSource {
@@ -12,6 +13,7 @@ export interface GeoEvent {
   readonly id: string;
   readonly start: number;
   readonly end: number;
+  readonly bbox: [number, number, number, number];
   readonly label: string;
   readonly geoJson: GeoJSON.GeoJSON;
 }
@@ -43,20 +45,32 @@ const source: GeoEventSource[] = [
 
 const events = group(source.map(toGeoEvent));
 
+console.log(events);
+
 export default function getGeoEvents(
   timeScale: number,
   timeFrom: number,
   timeTo: number,
   spaceScale: number,
-  latFrom: number,
-  latTo: number,
-  lngFrom: number,
-  lngTo: number
+  {
+    north,
+    south,
+    east,
+    west,
+  }: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  }
 ) {
   return (
-    events[timeScale]?.filter(
-      ({ start, end }) => start < timeTo && end > timeFrom
-    ) ?? []
+    events[timeScale]
+      ?.filter(({ start, end }) => start < timeTo && end > timeFrom)
+      ?.filter(
+        ({ bbox: [w, s, e, n] }) =>
+          w < east && s < north && e > west && n > south
+      ) ?? []
   );
 }
 
@@ -82,12 +96,14 @@ function toGeoEvent({
   const start = yearMonthDayToTime(...parseDate(startDate));
   const end = yearMonthDayToTime(...parseDate(endDate));
   const scale = Math.floor(-Math.log10(end - start));
+  const bbox = extent(source.geoJson);
 
   return [
     scale,
     {
       start,
       end,
+      bbox,
       ...source,
     },
   ];

@@ -35,20 +35,10 @@ export default function App() {
 
   useEffect(() => {
     const { minScale, maxScale, fromTime, toTime } = timelineBounds;
-    const { north, south, east, west } = mapBounds;
     const scales = range(Math.floor(minScale), maxScale);
     const moments = scales.map((scale) => ({
       scale,
-      moments: getGeoEvents(
-        scale,
-        fromTime,
-        toTime,
-        1,
-        south,
-        north,
-        east,
-        west
-      ),
+      moments: getGeoEvents(scale, fromTime, toTime, 1, mapBounds),
     }));
     setMoments(moments);
     setGeoFeatures(moments.flatMap(({ moments }) => moments));
