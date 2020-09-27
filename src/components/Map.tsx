@@ -1,6 +1,12 @@
 import "leaflet/dist/leaflet.css";
 import React, { useCallback, useRef } from "react";
-import { Map as LeafletMap, TileLayer } from "react-leaflet";
+import { GeoJSON, Map as LeafletMap, TileLayer } from "react-leaflet";
+
+export interface Feature {
+  readonly id: string;
+  readonly label: string;
+  readonly geoJson: GeoJSON.GeoJSON;
+}
 
 export interface Pos {
   readonly lat: number;
@@ -10,6 +16,7 @@ export interface Pos {
 
 export interface Props {
   readonly pos: Pos;
+  readonly features: Feature[];
   onChange(p: Pos): void;
   onBoundsChange?: (bounds: {
     north: number;
@@ -19,7 +26,7 @@ export interface Props {
   }) => void;
 }
 
-export function Map({ pos, onBoundsChange }: Props) {
+export function Map({ pos, features, onBoundsChange }: Props) {
   const ref = useRef<LeafletMap>(null);
   const onViewportChanged = useCallback(() => {
     const bounds = ref.current?.leafletElement.getBounds();
@@ -45,6 +52,9 @@ export function Map({ pos, onBoundsChange }: Props) {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
       />
+      {features.map((feature) => (
+        <GeoJSON key={feature.id} data={feature.geoJson} />
+      ))}
     </LeafletMap>
   );
 }

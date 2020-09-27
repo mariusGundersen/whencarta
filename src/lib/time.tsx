@@ -1,3 +1,6 @@
+import "proposal-temporal";
+import { Temporal } from "proposal-temporal";
+
 export function yearToTime(year: number, y: number) {
   return year / 10 ** y;
 }
@@ -62,8 +65,7 @@ export type Day =
   | 31;
 
 export function parseDate(input: string): [number, Month, Day] {
-  const [year, month = 1, day = 1] = input
-    .split("-")
-    .map((x) => parseInt(x, 10));
+  const { year, month, day } = Temporal.Date.from(input);
+
   return [year, (month - 1) as Month, (day - 1) as Day];
 }

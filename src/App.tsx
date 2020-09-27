@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import { Map } from "./components/Map";
+import { Feature, Map } from "./components/Map";
 import Timeline from "./components/Timeline";
 import { TimelineScaleMoments } from "./components/TimeSpanGroup";
-import getMoments, { maxYear, minYear } from "./getMoments";
+import getGeoEvents from "./getGeoEvents";
+import { maxYear, minYear } from "./getMoments";
 import range from "./lib/range";
 import useDebounce from "./lib/useDebounce";
 
@@ -18,13 +19,14 @@ export default function App() {
   const initialPos = getInitialPos();
 
   const [moments, setMoments] = useState<TimelineScaleMoments[]>([]);
+  const [geoFeatures, setGeoFeatures] = useState<Feature[]>([]);
   const [timelineBounds, setTimelineBounds] = useState({
     minScale: 0,
     maxScale: 0,
     fromTime: 0,
     toTime: 0,
   });
-  const [, /*mapBounds*/ setMapBounds] = useState({
+  const [mapBounds, setMapBounds] = useState({
     north: 0,
     east: 0,
     south: 0,
@@ -33,18 +35,34 @@ export default function App() {
 
   useEffect(() => {
     const { minScale, maxScale, fromTime, toTime } = timelineBounds;
+    const { north, south, east, west } = mapBounds;
     const scales = range(Math.floor(minScale), maxScale);
     const moments = scales.map((scale) => ({
       scale,
-      moments: getMoments(scale, fromTime, toTime),
+      moments: getGeoEvents(
+        scale,
+        fromTime,
+        toTime,
+        1,
+        south,
+        north,
+        east,
+        west
+      ),
     }));
     setMoments(moments);
-  }, [timelineBounds]);
+    setGeoFeatures(moments.flatMap(({ moments }) => moments));
+  }, [mapBounds, timelineBounds]);
 
   return (
     <div className="app">
       <input type="search" className="search" />
-      <Map pos={pos} onChange={setPos} onBoundsChange={setMapBounds} />
+      <Map
+        pos={pos}
+        onChange={setPos}
+        onBoundsChange={setMapBounds}
+        features={geoFeatures}
+      />
       <div className="info">info</div>
       <Timeline
         moments={moments}

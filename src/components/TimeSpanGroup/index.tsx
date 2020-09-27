@@ -10,6 +10,7 @@ import {
 import TimeSpan from "./TimeSpan";
 
 export interface TimelineMoment {
+  readonly id: string;
   readonly start: number;
   readonly end: number;
   readonly label: string;
@@ -38,12 +39,12 @@ export default function TimeSpanGroup({
         const y = scaleToPixelY(scale, transform);
         return (
           <g key={scale}>
-            {toLanes(moments).map(({ start, end, label, yIndex }) => {
+            {toLanes(moments).map(({ id, start, end, label, yIndex }) => {
               const x = timeToPixelX(start, transform);
               const width = durationToPixelWidth(end - start, transform);
               return (
                 <TimeSpan
-                  key={start}
+                  key={id}
                   label={label}
                   x={x}
                   y={y + height}
