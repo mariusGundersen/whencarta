@@ -24,6 +24,7 @@ export interface Props {
     minScale: number;
     maxScale: number;
   }) => void;
+  onPosChange?: (pos: { x: number; s: number }) => void;
 }
 
 export default function Timeline({
@@ -32,6 +33,7 @@ export default function Timeline({
   maxYear,
   initialPos,
   onBoundsChange,
+  onPosChange,
 }: Props) {
   const { width = 1000, height = 300, ref } = useResizeObserver<
     HTMLDivElement
@@ -83,6 +85,10 @@ export default function Timeline({
   useEffect(() => {
     onBoundsChange?.({ fromTime, toTime, minScale, maxScale });
   }, [onBoundsChange, fromTime, toTime, minScale, maxScale]);
+
+  useEffect(() => {
+    onPosChange?.({ x: transform.tx, s: transform.sx });
+  }, [onPosChange, transform.sx, transform.tx]);
 
   return (
     <PanZoom

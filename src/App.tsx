@@ -9,12 +9,8 @@ import range from "./lib/range";
 import useDebounce from "./lib/useDebounce";
 
 export default function App() {
-  const [pos, setPos] = useDebounce({ lat: 0, lng: 0, zoom: 2 }, 100);
-  //const [time, setTime] = useDebounce({ x: 0, s: 1 }, 100);
-
-  /*useEffect(() => {
-    window.history.replaceState(null, "", `#${time.x}|${time.s}`);
-  }, [time]);*/
+  const pos = { lat: 0, lng: 0, zoom: 2 };
+  const [time, setTime] = useState({ x: 0, s: 1 });
 
   const initialPos = getInitialPos();
 
@@ -44,15 +40,16 @@ export default function App() {
     setGeoFeatures(moments.flatMap(({ moments }) => moments));
   }, [mapBounds, timelineBounds]);
 
+  const delayedTime = useDebounce(time, 500);
+
+  useEffect(() => {
+    setInitialPos(delayedTime.x, delayedTime.s);
+  }, [delayedTime.s, delayedTime.x]);
+
   return (
     <div className="app">
       <input type="search" className="search" />
-      <Map
-        pos={pos}
-        onChange={setPos}
-        onBoundsChange={setMapBounds}
-        features={geoFeatures}
-      />
+      <Map pos={pos} onBoundsChange={setMapBounds} features={geoFeatures} />
       <div className="info">info</div>
       <Timeline
         moments={moments}
@@ -60,6 +57,7 @@ export default function App() {
         maxYear={maxYear}
         initialPos={initialPos}
         onBoundsChange={setTimelineBounds}
+        onPosChange={setTime}
       />
     </div>
   );
@@ -72,4 +70,8 @@ function getInitialPos(): { x: number; s: number } | undefined {
     const s = parseFloat(result[2]);
     return { x: x || 0, s: s || 1 };
   }
+}
+
+function setInitialPos(x: number, s: number) {
+  window.history.replaceState(null, "", `#${x}|${s}`);
 }

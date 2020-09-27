@@ -1,5 +1,5 @@
 import "leaflet/dist/leaflet.css";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { GeoJSON, Map as LeafletMap, TileLayer } from "react-leaflet";
 
 export interface Feature {
@@ -17,7 +17,6 @@ export interface Pos {
 export interface Props {
   readonly pos: Pos;
   readonly features: Feature[];
-  onChange(p: Pos): void;
   onBoundsChange?: (bounds: {
     north: number;
     east: number;
@@ -39,6 +38,19 @@ export function Map({ pos, features, onBoundsChange }: Props) {
       });
     }
   }, [onBoundsChange]);
+
+  useEffect(() => {
+    const bounds = ref.current?.leafletElement.getBounds();
+    if (bounds) {
+      onBoundsChange?.({
+        north: bounds.getNorth(),
+        east: bounds.getEast(),
+        south: bounds.getSouth(),
+        west: bounds.getWest(),
+      });
+    }
+  }, [onBoundsChange]);
+
   return (
     <LeafletMap
       ref={ref}
