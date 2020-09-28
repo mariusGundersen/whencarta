@@ -41,6 +41,33 @@ const source: GeoEventSource[] = [
       properties: null,
     },
   },
+  {
+    id: "2",
+    start: "-002286-01-01",
+    end: "-002251-01-01",
+    label: "Enheduanna lived",
+    geoJson: {
+      type: "Feature",
+      properties: null,
+      geometry: {
+        type: "Polygon",
+        coordinates: [
+          [
+            [46.101987, 30.963102],
+            [46.10159, 30.961726],
+            [46.103332, 30.960241],
+            [46.105285, 30.958934],
+            [46.107302, 30.958842],
+            [46.108117, 30.959817],
+            [46.107903, 30.961676],
+            [46.105544, 30.963001],
+            [46.103521, 30.963691],
+            [46.101987, 30.963102],
+          ],
+        ],
+      },
+    },
+  },
 ];
 
 const events = group(source.map(toGeoEvent));
